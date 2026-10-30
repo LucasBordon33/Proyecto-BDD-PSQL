@@ -3,6 +3,7 @@ import random
 from dotenv import load_dotenv
 import psycopg 
 from faker import Faker
+from datetime import timedelta
 
 load_dotenv()
 
@@ -12,10 +13,6 @@ Faker.seed(SEMILLA)
 random.seed(SEMILLA)
 
 def cargar_csv(cursor, nombre_tabla, columnas, ruta_archivo):
-    """
-    Función auxiliar para ejecutar COPY leyendo el archivo localmente.
-    Esto evita el error de PostgreSQL intentando buscar el archivo dentro del contenedor Docker.
-    """
     query_copy = f"COPY {nombre_tabla}({columnas}) FROM STDIN WITH (FORMAT csv, HEADER true, DELIMITER ',')"
     with open(ruta_archivo, 'r', encoding='utf-8') as f:
         with cursor.copy(query_copy) as copy:
@@ -24,18 +21,14 @@ def cargar_csv(cursor, nombre_tabla, columnas, ruta_archivo):
     print(f"Catálogo {nombre_tabla} cargado correctamente.")
 
 def generar_datos_produccion(cursor):
-    print("Generando datos masivos con Faker...")
+    print("Generando datos masivos con Faker (Esto tomará unos segundos)...")
 
     # 1. BODEGAS
     bodegas = []
     for _ in range(15):
         cuit = fake.numerify('###########')
         bodegas.append((cuit, fake.company(), fake.address()[:250]))
-    
-    cursor.executemany(
-        "INSERT INTO bodega (cuit, razon_social, domicilio) VALUES (%s, %s, %s)",
-        bodegas
-    )
+    cursor.executemany("INSERT INTO bodega (cuit, razon_social, domicilio) VALUES (%s, %s, %s)", bodegas)
     cuit_bodegas = [b[0] for b in bodegas]
 
     # 2. VINOS
@@ -52,13 +45,9 @@ def generar_datos_produccion(cursor):
         graduacion = round(random.uniform(5.0, 20.0), 2) 
         precio = round(random.uniform(2000.0, 45000.0), 2)
         cuit_bodega = random.choice(cuit_bodegas) 
-
         vinos.append((codigo_vino, nombre, tipo, anada, volumen, graduacion, precio, cuit_bodega))
 
-    cursor.executemany(
-        "INSERT INTO vino (codigo_vino, nombre, tipo, anada, volumen, graduacion, precio, cuit_bodega) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-        vinos
-    )
+    cursor.executemany("INSERT INTO vino (codigo_vino, nombre, tipo, anada, volumen, graduacion, precio, cuit_bodega) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", vinos)
     codigos_vinos = [v[0] for v in vinos]    
 
     # 3. VINO_CEPA y VINO_MARIDAJE
@@ -74,7 +63,6 @@ def generar_datos_produccion(cursor):
     for cv in codigos_vinos:
         num_cepas = random.randint(1, 3)
         cepas_sel = random.sample(ids_cepas, num_cepas)
-        
         if num_cepas == 1:
             vino_cepa_data.append((cv, cepas_sel[0], 100.00))
         elif num_cepas == 2:
@@ -102,12 +90,12 @@ def generar_datos_produccion(cursor):
     ids_localidades = [row[0] for row in cursor.fetchall()]
     dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
-    salas_data = []
+  
+    ids_salas = []
     for _ in range(30):  
-        salas_data.append((fake.street_name(), random.randint(100, 9999), random.choice(dias_semana), random.choice(ids_localidades)))
-        
-    cursor.executemany("INSERT INTO sala_venta (calle, numero, dia_cierre_semanal, id_localidad) VALUES (%s, %s, %s, %s) RETURNING id_sala", salas_data)
-    ids_salas = [row[0] for row in cursor.fetchall()]
+        data_sala = (fake.street_name(), random.randint(100, 9999), random.choice(dias_semana), random.choice(ids_localidades))
+        cursor.execute("INSERT INTO sala_venta (calle, numero, dia_cierre_semanal, id_localidad) VALUES (%s, %s, %s, %s) RETURNING id_sala", data_sala)
+        ids_salas.append(cursor.fetchone()[0])
 
     empleados_data = []
     for _ in range(100):
@@ -119,7 +107,6 @@ def generar_datos_produccion(cursor):
     for i in range(1, 21): 
         cod_transp = f"TR-{str(i).zfill(3)}"
         transportistas_data.append((cod_transp, fake.company(), fake.numerify('###########'), fake.company_email(), fake.numerify('##########'), fake.address()[:250]))
-        
         loc_cubiertas = random.sample(ids_localidades, random.randint(1, 5))
         for loc in loc_cubiertas:
             transportista_loc_data.append((cod_transp, loc))
@@ -129,17 +116,13 @@ def generar_datos_produccion(cursor):
 
     # 5. CLIENTES Y SUBTIPOS
     tipos_clientes = ['socio', 'distribuidor', 'exportador']
-    clientes_data = []
-    
-    for _ in range(20000):
-        clientes_data.append((fake.name(), 'DNI', fake.unique.numerify('########'), fake.street_address(), random.choice(ids_localidades), fake.date_between(start_date='-5y', end_date='today'), random.choices(tipos_clientes, weights=[80, 15, 5])[0]))
-
     socios, distribuidores, exportadores = [], [], []
     
-    cursor.executemany("INSERT INTO cliente (nombre_razon_social, tipo_doc, nro_doc, direccion, id_localidad, fecha_alta, tipo_cliente) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id_cliente, tipo_cliente", clientes_data)
-    
-    for row in cursor.fetchall():
-        id_cli, tipo = row[0], row[1]
+    for _ in range(20000):
+        data_cliente = (fake.name(), 'DNI', fake.unique.numerify('########'), fake.street_address(), random.choice(ids_localidades), fake.date_between(start_date='-5y', end_date='today'), random.choices(tipos_clientes, weights=[80, 15, 5])[0])
+        cursor.execute("INSERT INTO cliente (nombre_razon_social, tipo_doc, nro_doc, direccion, id_localidad, fecha_alta, tipo_cliente) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id_cliente, tipo_cliente", data_cliente)
+        id_cli, tipo = cursor.fetchone()
+        
         if tipo == 'socio':
             socios.append((id_cli,))
         elif tipo == 'distribuidor':
@@ -155,8 +138,15 @@ def generar_datos_produccion(cursor):
     for exp in exportadores:
         for _ in range(random.randint(1, 3)):
             f_emision = fake.date_between(start_date='-2y', end_date='today')
-            f_vencimiento = fake.date_between_dates(date_start=f_emision, date_end='+3y')
+            
+            # Sumamos 1 día a la emisión para garantizar que el vencimiento sea siempre posterior
+            f_vencimiento = fake.date_between_dates(
+                date_start=f_emision + timedelta(days=1), 
+                date_end='+3y'
+            )
+            
             permisos_data.append((fake.unique.bothify('PERM-########'), exp[0], f_emision, f_vencimiento))
+    
     cursor.executemany("INSERT INTO permiso_exportacion (id_permiso, id_cliente, fecha_emision, fecha_vencimiento) VALUES (%s, %s, %s, %s)", permisos_data)
 
     # 6. STOCKS
@@ -173,60 +163,50 @@ def generar_datos_produccion(cursor):
     # 7. INGRESOS Y TRANSFERENCIAS
     estados = ['en_confeccion', 'terminado', 'procesado']
     
-    ingresos_data = []
-    ingresos_renglones_data = []
-    
     cursor.execute("SELECT codigo FROM transportista")
     codigos_transportistas = [row[0] for row in cursor.fetchall()]
 
+    ids_ingresos = []
     for _ in range(2000): 
         fecha = fake.date_between(start_date='-2y', end_date='today')
         estado = random.choices(estados, weights=[5, 10, 85])[0] 
         transp = random.choice(codigos_transportistas)
         bodega = random.choice(cuit_bodegas)
-        
-        ingresos_data.append((fecha, estado, transp, bodega))
-        
-    cursor.executemany("INSERT INTO ingreso (fecha, estado, cod_transportista, cuit_bodega) VALUES (%s, %s, %s, %s) RETURNING codigo", ingresos_data)
-    ids_ingresos = [row[0] for row in cursor.fetchall()]
+        cursor.execute("INSERT INTO ingreso (fecha, estado, cod_transportista, cuit_bodega) VALUES (%s, %s, %s, %s) RETURNING codigo", (fecha, estado, transp, bodega))
+        ids_ingresos.append(cursor.fetchone()[0])
     
+    ingresos_renglones_data = []
     for cod_ingreso in ids_ingresos:
         cant_vinos = random.randint(2, 5) 
         vinos_ingreso = random.sample(codigos_vinos, cant_vinos)
         for cv in vinos_ingreso:
-            cantidad = random.randint(50, 500)
-            ingresos_renglones_data.append((cod_ingreso, cv, cantidad))
-            
+            ingresos_renglones_data.append((cod_ingreso, cv, random.randint(50, 500)))
     cursor.executemany("INSERT INTO ingreso_vino (codigo_ingreso, codigo_vino, cantidad) VALUES (%s, %s, %s)", ingresos_renglones_data)
 
-    transferencias_data = []
-    transferencias_renglones_data = []
-    
+    # --- CORRECCIÓN: Bucle FOR para Transferencias ---
+    ids_transferencias = []
     for _ in range(2500): 
         sala = random.choice(ids_salas)
         fecha = fake.date_between(start_date='-2y', end_date='today')
         estado = random.choices(estados, weights=[5, 10, 85])[0]
-        
-        transferencias_data.append((sala, fecha, estado))
-        
-    cursor.executemany("INSERT INTO transferencia (id_sala, fecha_confeccion, estado) VALUES (%s, %s, %s) RETURNING nro_transferencia", transferencias_data)
-    ids_transferencias = [row[0] for row in cursor.fetchall()]
+        cursor.execute("INSERT INTO transferencia (id_sala, fecha_confeccion, estado) VALUES (%s, %s, %s) RETURNING nro_transferencia", (sala, fecha, estado))
+        ids_transferencias.append(cursor.fetchone()[0])
     
+    transferencias_renglones_data = []
     for nro_transf in ids_transferencias:
         cant_vinos = random.randint(2, 5) 
         vinos_transf = random.sample(codigos_vinos, cant_vinos)
         for cv in vinos_transf:
-            cantidad = random.randint(12, 120)
-            transferencias_renglones_data.append((nro_transf, cv, cantidad))
-            
+            transferencias_renglones_data.append((nro_transf, cv, random.randint(12, 120)))
     cursor.executemany("INSERT INTO transferencia_vino (nro_transferencia, codigo_vino, cantidad) VALUES (%s, %s, %s)", transferencias_renglones_data)
 
     # 8. COMPROBANTES DE VENTA
     precios_vinos = {v[0]: v[6] for v in vinos} 
     ids_clientes_todos = [c[0] for c in socios] + [c[0] for c in distribuidores] + [c[0] for c in exportadores]
     
+    cursor.execute("SELECT id_cliente, tipo_cliente FROM cliente")
+    tipo_cli_dict = {row[0]: row[1] for row in cursor.fetchall()}
     mapa_descuentos = {'socio': 10.0, 'distribuidor': 20.0, 'exportador': 30.0}
-    tipo_cli_dict = {c[0]: c[6] for c in zip([row[0] for row in cursor.execute("SELECT id_cliente, tipo_cliente FROM cliente").fetchall()], [row[1] for row in cursor.execute("SELECT id_cliente, tipo_cliente FROM cliente").fetchall()])}
 
     comprobantes_data = []
     renglones_totales_data = []
@@ -248,44 +228,31 @@ def generar_datos_produccion(cursor):
             precio_unitario = precios_vinos[cv]
             subtotal_renglon = round(cantidad * precio_unitario, 2)
             subtotal_comprobante += subtotal_renglon
-            
-            renglones_totales_data.append((
-                nro_comprobante_secuencia, cv, cantidad, precio_unitario, porcentaje_desc, subtotal_renglon
-            ))
+            renglones_totales_data.append((nro_comprobante_secuencia, cv, cantidad, precio_unitario, porcentaje_desc, subtotal_renglon))
             
         descuento_comprobante = round(subtotal_comprobante * (porcentaje_desc / 100.0), 2)
         total_comprobante = round(subtotal_comprobante - descuento_comprobante, 2)
-        
-        comprobantes_data.append((
-            fecha_comp, id_cli, id_sala, subtotal_comprobante, descuento_comprobante, total_comprobante
-        ))
+        comprobantes_data.append((fecha_comp, id_cli, id_sala, subtotal_comprobante, descuento_comprobante, total_comprobante))
         nro_comprobante_secuencia += 1
 
     cursor.executemany("INSERT INTO comprobante (fecha, id_cliente, id_sala, subtotal, descuento, total) VALUES (%s, %s, %s, %s, %s, %s)", comprobantes_data)
     
     chunk_size = 50000
     for i in range(0, len(renglones_totales_data), chunk_size):
-        cursor.executemany(
-            "INSERT INTO vino_comprobante (nro_comprobante, codigo_vino, cantidad, precio_unitario, descuento, subtotal) VALUES (%s, %s, %s, %s, %s, %s)", 
-            renglones_totales_data[i:i+chunk_size]
-        )
+        cursor.executemany("INSERT INTO vino_comprobante (nro_comprobante, codigo_vino, cantidad, precio_unitario, descuento, subtotal) VALUES (%s, %s, %s, %s, %s, %s)", renglones_totales_data[i:i+chunk_size])
 
     # 9. FINCAS, PARCELAS, LOTES Y ANÁLISIS DE CALIDAD
     cursor.execute("SELECT id_departamento FROM departamento")
     ids_deptos = [row[0] for row in cursor.fetchall()]
 
-    fincas = []
+    # --- CORRECCIÓN: Bucle FOR para Fincas ---
+    ids_fincas = []
     for _ in range(50): 
         nombre = f"Finca {fake.last_name()}"
         superficie = round(random.uniform(10.0, 500.0), 2)
         depto = random.choice(ids_deptos)
-        fincas.append((nombre, superficie, depto))
-
-    cursor.executemany(
-        "INSERT INTO finca (nombre, superficie_total, id_departamento) VALUES (%s, %s, %s) RETURNING id_finca",
-        fincas
-    )
-    ids_fincas = [row[0] for row in cursor.fetchall()]
+        cursor.execute("INSERT INTO finca (nombre, superficie_total, id_departamento) VALUES (%s, %s, %s) RETURNING id_finca", (nombre, superficie, depto))
+        ids_fincas.append(cursor.fetchone()[0])
 
     parcelas = []
     for id_finca in ids_fincas:
@@ -295,16 +262,12 @@ def generar_datos_produccion(cursor):
             ano_plantacion = random.randint(1990, 2022)
             cepa = random.choice(ids_cepas)
             parcelas.append((nro_parcela, id_finca, superficie_parcela, ano_plantacion, cepa))
+    cursor.executemany("INSERT INTO parcela (nro_parcela, id_finca, superficie, ano_plantacion, id_cepa) VALUES (%s, %s, %s, %s, %s)", parcelas)
 
-    cursor.executemany(
-        "INSERT INTO parcela (nro_parcela, id_finca, superficie, ano_plantacion, id_cepa) VALUES (%s, %s, %s, %s, %s)",
-        parcelas
-    )
-
-    lotes = []
-    analisis = []
     campanas = [2022, 2023, 2024, 2025, 2026]
 
+    # --- CORRECCIÓN: Bucle FOR para Lotes ---
+    ids_lotes = []
     for p in parcelas:
         nro_parcela, id_finca = p[0], p[1]
         campanas_cosechadas = random.sample(campanas, random.randint(1, len(campanas)))
@@ -313,14 +276,10 @@ def generar_datos_produccion(cursor):
             fecha_cosecha = fake.date_between_dates(date_start=f"-{2026-campana}y", date_end=f"-{2026-campana}y")
             kilos = round(random.uniform(1500.0, 8000.0), 2)
             bodega_destino = random.choice(cuit_bodegas)
-            lotes.append((nro_parcela, id_finca, campana, fecha_cosecha, kilos, bodega_destino))
+            cursor.execute("INSERT INTO lote_uva (nro_parcela, id_finca, campana, fecha_cosecha, kilos_cosechados, cuit_bodega) VALUES (%s, %s, %s, %s, %s, %s) RETURNING nro_lote", (nro_parcela, id_finca, campana, fecha_cosecha, kilos, bodega_destino))
+            ids_lotes.append(cursor.fetchone()[0])
 
-    cursor.executemany(
-        "INSERT INTO lote_uva (nro_parcela, id_finca, campana, fecha_cosecha, kilos_cosechados, cuit_bodega) VALUES (%s, %s, %s, %s, %s, %s) RETURNING nro_lote",
-        lotes
-    )
-    ids_lotes = [row[0] for row in cursor.fetchall()]
-
+    analisis = []
     for nro_lote in ids_lotes:
         cantidad_analisis = random.randint(1, 3)
         for _ in range(cantidad_analisis):
@@ -329,11 +288,7 @@ def generar_datos_produccion(cursor):
             acidez = round(random.uniform(4.5, 7.5), 2)
             brix = round(random.uniform(22.0, 26.0), 2)
             analisis.append((fecha, ph, acidez, brix, nro_lote))
-
-    cursor.executemany(
-        "INSERT INTO analisis_calidad (fecha, ph, acidez_total, g_brix, nro_lote) VALUES (%s, %s, %s, %s, %s)",
-        analisis
-    )
+    cursor.executemany("INSERT INTO analisis_calidad (fecha, ph, acidez_total, g_brix, nro_lote) VALUES (%s, %s, %s, %s, %s)", analisis)
 
     print("Datos transaccionales generados con éxito.")
 
@@ -348,15 +303,13 @@ if __name__ == "__main__":
         ) as conn:
             with conn.cursor() as cur:
                 print("Iniciando carga de datos...")
-
-                cargar_csv(cur, 'cepa', 'nombre, tipo', 'csv/cepas.csv')
-                cargar_csv(cur, 'maridaje', 'nombre, temperatura', 'csv/maridajes.csv')
-                cargar_csv(cur, 'provincia', 'nombre', 'csv/provincias.csv')
-                cargar_csv(cur, 'departamento', 'id_provincia, nombre_departamento', 'csv/departamentos.csv')
-                cargar_csv(cur, 'localidad', 'nombre, id_provincia, codigo_postal, encargado_localidad', 'csv/localidades.csv')
+                cargar_csv(cur, 'cepa', 'nombre, tipo', 'db/seed/csv/cepas.csv')
+                cargar_csv(cur, 'maridaje', 'nombre, temperatura', 'db/seed/csv/maridajes.csv')
+                cargar_csv(cur, 'provincia', 'nombre', 'db/seed/csv/provincias.csv')
+                cargar_csv(cur, 'departamento', 'id_provincia, nombre_departamento', 'db/seed/csv/departamentos.csv')
+                cargar_csv(cur, 'localidad', 'nombre, id_provincia, codigo_postal, encargado_localidad', 'db/seed/csv/localidades.csv')
 
                 generar_datos_produccion(cur)
-
             conn.commit()
             print("Proceso finalizado. Base de datos poblada exitosamente.")
 

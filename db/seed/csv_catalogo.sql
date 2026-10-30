@@ -9,7 +9,7 @@ CEPAS
  */
 
 COPY cepa(nombre, tipo)
-FROM 'csv/cepas.csv'
+FROM './csv/cepas.csv'
 DELIMITER ','
 CSV HEADER;
 
@@ -19,7 +19,7 @@ MARIDAJES
  */
 
 COPY maridaje(nombre, temperatura)
-FROM 'csv/maridajes.csv'
+FROM './csv/maridajes.csv'
 DELIMITER ','
 CSV HEADER;
 
@@ -32,7 +32,7 @@ COPY departamento(
     id_provincia,
     nombre_departamento
 )
-FROM 'csv/departamentos.csv'
+FROM './csv/departamentos.csv'
 DELIMITER ','
 CSV HEADER;
 
@@ -47,7 +47,7 @@ COPY localidad(
     codigo_postal,
     encargado_localidad
 )
-FROM 'csv/localidades.csv'
+FROM './csv/localidades.csv'
 DELIMITER ','
 CSV HEADER;
 
@@ -66,7 +66,7 @@ COPY vino(
     precio,
     cuit_bodega
 )
-FROM 'csv/vinos.csv'
+FROM './csv/vinos.csv'
 DELIMITER ','
 CSV HEADER;
 
