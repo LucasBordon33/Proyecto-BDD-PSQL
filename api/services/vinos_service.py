@@ -28,3 +28,6 @@ async def obtener_detalle_vino(pool: asyncpg.Pool, codigo_vino: str) -> dict:
         )
         
     return vino
+
+async def borrar_vino(pool: asyncpg.Pool, codigo_vino: str) -> dict:
+    pass

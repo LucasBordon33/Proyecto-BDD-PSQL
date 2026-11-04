@@ -1,5 +1,4 @@
 import asyncpg
-import json
 
 async def get_vinos_catalogo(pool: asyncpg.Pool, limit: int, offset: int, tipo: str, cepa: str, bodega: str, anada: int) -> list[dict]:
     query = "SELECT DISTINCT v.codigo_vino, v.nombre, v.tipo, v.anada, v.cuit_bodega, v.precio FROM vino v "
@@ -53,3 +52,6 @@ async def get_vino_detalle(pool: asyncpg.Pool, codigo_vino: str) -> dict | None:
         if record:
             return dict(record)
         return None
+
+async def delete_vino(pool: asyncpg.Pool, codigo_vino: str) -> dict | None:
+    pass

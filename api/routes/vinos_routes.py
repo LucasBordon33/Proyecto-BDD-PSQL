@@ -23,3 +23,15 @@ async def catalogo_vinos(
 async def detalle_vino(request: Request, cod: str):
     pool = request.app.state.pool
     return await vinos_service.obtener_detalle_vino(pool, cod)
+
+@router.delete("/{cod}")
+async def borrar_vino(request: Request, cod: str):
+    pass
+
+@router.post("")
+async def cargar_vino(request: Request):
+    pass
+
+@router.put("/{cod}")
+async def modificar_vino(request: Request):
+    pass
