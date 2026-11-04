@@ -3,6 +3,8 @@ ROL PROPIETARIO
 CONTROL TOTAL
 */
 
+CREATE ROLE rol_propietario WITH LOGIN PASSWORD 'vinosgeniales123';
+
 GRANT ALL PRIVILEGES
 ON ALL TABLES IN SCHEMA public
 TO rol_propietario;
@@ -18,6 +20,8 @@ TO rol_propietario;
 /*
 ROL API
 */
+
+CREATE ROLE rol_api;
 
 GRANT
 SELECT,
@@ -40,6 +44,8 @@ TO rol_api;
 /*
 ROL SOLO LECTURA
 */
+
+CREATE ROLE rol_lectura;
 
 GRANT SELECT
 ON ALL TABLES IN SCHEMA public
