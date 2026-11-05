@@ -5,6 +5,9 @@ import asyncpg
 from api.core.database import create_db_pool
 from api.routes.vinos_routes import router as vinos_router
 from api.routes.clientes_routes import router as clientes_router
+from api.routes.comprobantes_routes import router as comprobantes_router
+from api.routes.transferencias_routes import router as transferencias_router
+from api.routes.ingresos_routes import router as ingresos_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,3 +42,6 @@ async def salud(request: Request):
 
 app.include_router(vinos_router)
 app.include_router(clientes_router)
+app.include_router(comprobantes_router)
+app.include_router(transferencias_router)
+app.include_router(ingresos_router)

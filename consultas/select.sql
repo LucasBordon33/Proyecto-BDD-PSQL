@@ -207,3 +207,5 @@ WHERE NOT EXISTS (
     WHERE comp.id_cliente = c.id_cliente
       AND v.tipo = 'tinto'
 );
+
+

@@ -72,3 +72,67 @@ class ClienteResponse(ClienteBase):
     zona_cobertura: str | None = None
     nro_habilitacion: str | None = None
     pais_destino: str | None = None
+
+
+""" COMPROBANTES (VENTAS) """ 
+
+
+class RenglonComprobanteCreate(BaseModel):
+    codigo_vino: str = Field(..., max_length=30)
+    cantidad: int = Field(..., gt=0)
+    descuento: float = Field(0.00, ge=0)
+
+class ComprobanteCreate(BaseModel):
+    id_cliente: int
+    id_sala: int
+    renglones: list[RenglonComprobanteCreate] = Field(..., min_length=1)
+
+class RenglonComprobanteResponse(BaseModel):
+    codigo_vino: str
+    cantidad: int
+    precio_unitario: float
+    descuento: float
+    subtotal: float
+
+class ComprobanteResponse(BaseModel):
+    numero: int
+    fecha: date
+    id_cliente: int
+    id_sala: int
+    subtotal: float
+    descuento: float
+    total: float
+    renglones: list[RenglonComprobanteResponse]
+
+
+""" TRANSFERENCIAS """
+
+class TransferenciaCreate(BaseModel):
+    id_sala: int
+
+class TransferenciaResponse(BaseModel):
+    nro_transferencia: int
+    id_sala: int
+    fecha_confeccion: date
+    estado: str
+
+class TransferenciaRenglonCreate(BaseModel):
+    codigo_vino: str = Field(..., max_length=30)
+    cantidad: int = Field(..., gt=0)
+
+""" INGRESOS """ 
+
+class IngresoCreate(BaseModel):
+    cod_transportista: str = Field(..., max_length=30)
+    cuit_bodega: str = Field(..., min_length=11, max_length=11, description="CUIT de la bodega sin guiones (11 dígitos)")
+
+class IngresoRenglonCreate(BaseModel):
+    codigo_vino: str = Field(..., max_length=30)
+    cantidad: int = Field(..., gt=0)
+
+class IngresoResponse(BaseModel):
+    codigo: int
+    fecha: date
+    estado: str
+    cod_transportista: str
+    cuit_bodega: str
