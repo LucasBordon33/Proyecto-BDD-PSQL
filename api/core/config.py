@@ -1,20 +1,21 @@
-""" Configuración del proyecto"""
-
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
-""" Ajustes leídos desde el .env"""
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+    
+    postgres_user: str = Field(validation_alias="DB_USER")
+    postgres_password: str = Field(validation_alias="DB_PASSWORD")
+    postgres_db: str = Field(validation_alias="DB_NAME")
+    postgres_host: str = Field(default="db", validation_alias="DB_HOST")
+    postgres_port: int = Field(default=5432, validation_alias="DB_PORT")
+    db_command_timeout: int = 30
+    db_pool_min_size: int = 5
+    db_pool_max_size: int = 20
 
-    postgres_user: str
-    postgres_password: str
-    postgres_db: str
-    postgres_host: str = "db" 
-    postgres_port: int = 5432
-
-
-    http_timeout: float = 30.0
-    http_retries: int = 3
-    max_connections: int = 20
+settings = Settings()
 

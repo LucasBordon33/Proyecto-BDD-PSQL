@@ -238,7 +238,7 @@ CREATE TABLE transportista_localidad (
 
 CREATE TABLE auditoria_precio (
     id_auditoria INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    codigo_vino VARCHAR(30) NOT NULL REFERENCES vino(codigo_vino) ON DELETE RESTRICT,
+    codigo_vino VARCHAR(30) NOT NULL REFERENCES vino(codigo_vino) ON DELETE CASCADE,
     precio_anterior NUMERIC(10,2) NOT NULL CHECK (precio_anterior >= 0),
     precio_nuevo NUMERIC(10,2) NOT NULL CHECK (precio_nuevo >= 0),
     fecha_hora TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

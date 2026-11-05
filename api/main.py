@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import asyncpg
 from api.core.database import create_db_pool
-from api.routes import vinos_routes
+from api.routes.vinos_routes import router as vinos_router
+from api.routes.clientes_routes import router as clientes_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,11 +18,11 @@ app = FastAPI(lifespan=lifespan, title="Bodegas del Atuel API")
 @app.exception_handler(asyncpg.PostgresError)
 async def postgres_error_handler(request: Request, exc: asyncpg.PostgresError):
     sqlstate = exc.sqlstate
-    if sqlstate == '23505': # UNIQUE violado
+    if sqlstate == '23505': 
         return JSONResponse(status_code=409, content={"detail": "Conflicto: El registro ya existe."})
-    elif sqlstate in ('23503', '23514', '23502'): # FK, CHECK, NOT NULL
+    elif sqlstate in ('23503', '23514', '23502'): 
         return JSONResponse(status_code=422, content={"detail": f"Error de validación de datos: {exc.message}"})
-    elif sqlstate == 'P0001': # RAISE EXCEPTION de triggers
+    elif sqlstate == 'P0001': # 
         return JSONResponse(status_code=409, content={"detail": exc.message})
     
     return JSONResponse(status_code=500, content={"detail": "Error interno de base de datos."})
@@ -36,4 +37,5 @@ async def salud(request: Request):
     except Exception:
         return JSONResponse(status_code=503, content={"estado": "error", "base_de_datos": "desconectada"})
 
-app.include_router(vinos_routes.router)
+app.include_router(vinos_router)
+app.include_router(clientes_router)
