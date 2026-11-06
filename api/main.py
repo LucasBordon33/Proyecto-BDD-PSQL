@@ -1,13 +1,15 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-import asyncpg
+from api.core.exceptions import postgres_error_handler 
 from api.core.database import create_db_pool
+import asyncpg
 from api.routes.vinos_routes import router as vinos_router
 from api.routes.clientes_routes import router as clientes_router
 from api.routes.comprobantes_routes import router as comprobantes_router
 from api.routes.transferencias_routes import router as transferencias_router
 from api.routes.ingresos_routes import router as ingresos_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,18 +19,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="Bodegas del Atuel API")
 
-# Manejador global para traducir errores SQLSTATE a HTTP
-@app.exception_handler(asyncpg.PostgresError)
-async def postgres_error_handler(request: Request, exc: asyncpg.PostgresError):
-    sqlstate = exc.sqlstate
-    if sqlstate == '23505': 
-        return JSONResponse(status_code=409, content={"detail": "Conflicto: El registro ya existe."})
-    elif sqlstate in ('23503', '23514', '23502'): 
-        return JSONResponse(status_code=422, content={"detail": f"Error de validación de datos: {exc.message}"})
-    elif sqlstate == 'P0001': # 
-        return JSONResponse(status_code=409, content={"detail": exc.message})
-    
-    return JSONResponse(status_code=500, content={"detail": "Error interno de base de datos."})
+# Vincular el manejador global de errores de PostgreSQL
+app.add_exception_handler(asyncpg.PostgresError, postgres_error_handler)
 
 # Endpoint de salud requerido
 @app.get("/salud")
