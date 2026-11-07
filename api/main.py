@@ -9,6 +9,7 @@ from api.routes.clientes_routes import router as clientes_router
 from api.routes.comprobantes_routes import router as comprobantes_router
 from api.routes.transferencias_routes import router as transferencias_router
 from api.routes.ingresos_routes import router as ingresos_router
+from api.routes.reportes import router as reportes_router
 
 
 @asynccontextmanager
@@ -37,3 +38,4 @@ app.include_router(clientes_router)
 app.include_router(comprobantes_router)
 app.include_router(transferencias_router)
 app.include_router(ingresos_router)
+app.include_router(reportes_router)
