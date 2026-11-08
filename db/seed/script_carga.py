@@ -153,12 +153,18 @@ def generar_datos_produccion(cursor):
     stock_deposito_data = [(cv, random.randint(500, 5000)) for cv in codigos_vinos]
     cursor.executemany("INSERT INTO stock_deposito (codigo_vino, cantidad) VALUES (%s, %s)", stock_deposito_data)
 
-    stock_sala_data = []
-    for s in ids_salas:
-        vinos_sala = random.sample(codigos_vinos, random.randint(50, len(codigos_vinos)))
-        for v in vinos_sala:
-            stock_sala_data.append((s, v, random.randint(10, 500)))
-    cursor.executemany("INSERT INTO stock_sala (id_sala, codigo_vino, cantidad) VALUES (%s, %s, %s)", stock_sala_data)
+    # Stock inicial para TODOS los vinos en TODAS las salas (CROSS JOIN).
+    # El trigger trg_validar_stock_venta (RN09) valida y descuenta stock_sala
+    # en cada renglon de venta: con cobertura total y 10.000 unidades por
+    # celda (30 salas x 400 vinos = 12.000 filas) las ~150.000 ventas
+    # simuladas siempre tienen saldo y la carga masiva no aborta.
+    cursor.execute("""
+        INSERT INTO stock_sala (id_sala, codigo_vino, cantidad)
+        SELECT s.id_sala, v.codigo_vino, 10000
+        FROM sala_venta s
+        CROSS JOIN vino v;
+    """)
+    print("Stock inicial salas x vinos (CROSS JOIN, 10.000 uds) cargado.")
 
     # 7. INGRESOS Y TRANSFERENCIAS
     estados = ['en_confeccion', 'terminado', 'procesado']
@@ -222,24 +228,45 @@ def generar_datos_produccion(cursor):
         cant_renglones = random.randint(1, 5) 
         vinos_compra = random.sample(codigos_vinos, cant_renglones)
         
-        subtotal_comprobante = 0.0
         for cv in vinos_compra:
             cantidad = random.randint(1, 12)
             precio_unitario = precios_vinos[cv]
             subtotal_renglon = round(cantidad * precio_unitario, 2)
-            subtotal_comprobante += subtotal_renglon
             renglones_totales_data.append((nro_comprobante_secuencia, cv, cantidad, precio_unitario, porcentaje_desc, subtotal_renglon))
-            
-        descuento_comprobante = round(subtotal_comprobante * (porcentaje_desc / 100.0), 2)
-        total_comprobante = round(subtotal_comprobante - descuento_comprobante, 2)
-        comprobantes_data.append((fecha_comp, id_cli, id_sala, subtotal_comprobante, descuento_comprobante, total_comprobante))
+
+        # El comprobante se inserta con subtotal/descuento/total en 0.00:
+        # el trigger fn_descuento_stock_total recalcula 'subtotal' (y
+        # total = subtotal - descuento) despues de CADA renglon, por lo que
+        # insertar ya el descuento final producia totales negativos
+        # intermedios que violaban comprobante_total_check. El descuento
+        # definitivo se aplica al final, cuando todos los renglones existen.
+        comprobantes_data.append((fecha_comp, id_cli, id_sala))
         nro_comprobante_secuencia += 1
 
-    cursor.executemany("INSERT INTO comprobante (fecha, id_cliente, id_sala, subtotal, descuento, total) VALUES (%s, %s, %s, %s, %s, %s)", comprobantes_data)
+    cursor.executemany("INSERT INTO comprobante (fecha, id_cliente, id_sala) VALUES (%s, %s, %s)", comprobantes_data)
     
     chunk_size = 50000
     for i in range(0, len(renglones_totales_data), chunk_size):
         cursor.executemany("INSERT INTO vino_comprobante (nro_comprobante, codigo_vino, cantidad, precio_unitario, descuento, subtotal) VALUES (%s, %s, %s, %s, %s, %s)", renglones_totales_data[i:i+chunk_size])
+
+    # Descuento definitivo sobre el subtotal ya consolidado por el trigger
+    # (10% socio / 20% distribuidor / 30% exportador, igual que mapa_descuentos).
+    # Al hacerse cuando TODOS los renglones ya fueron insertados, el total
+    # final nunca es negativo y no se viola comprobante_total_check.
+    cursor.execute("""
+        UPDATE comprobante c
+        SET descuento = ROUND(c.subtotal * CASE cl.tipo_cliente::text
+                                WHEN 'socio' THEN 10.0
+                                WHEN 'distribuidor' THEN 20.0
+                                ELSE 30.0 END / 100.0, 2),
+            total = c.subtotal - ROUND(c.subtotal * CASE cl.tipo_cliente::text
+                                WHEN 'socio' THEN 10.0
+                                WHEN 'distribuidor' THEN 20.0
+                                ELSE 30.0 END / 100.0, 2)
+        FROM cliente cl
+        WHERE cl.id_cliente = c.id_cliente;
+    """)
+    print("Descuentos y totales de comprobantes aplicados.")
 
     # 9. FINCAS, PARCELAS, LOTES Y ANÁLISIS DE CALIDAD
     cursor.execute("SELECT id_departamento FROM departamento")
