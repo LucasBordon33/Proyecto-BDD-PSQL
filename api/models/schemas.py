@@ -46,7 +46,7 @@ class ClienteBase(BaseModel):
     nro_doc: str = Field(..., max_length=15)
     direccion: str = Field(..., max_length=200)
     id_localidad: int
-    tipo_cliente: str = Field(..., description="Valor exacto del enum: ej. 'distribuidor', 'socio_club', 'exportador'")
+    tipo_cliente: str = Field(..., description="Valor exacto del enum: ej. 'distribuidor', 'socio', 'exportador'")
 
 class ClienteCreate(ClienteBase):
     fecha_alta: date | None = None

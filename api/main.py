@@ -10,7 +10,7 @@ from api.routes.comprobantes_routes import router as comprobantes_router
 from api.routes.transferencias_routes import router as transferencias_router
 from api.routes.ingresos_routes import router as ingresos_router
 from api.routes.reportes import router as reportes_router
-
+from fastapi.responses import RedirectResponse
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,6 +19,10 @@ async def lifespan(app: FastAPI):
     await app.state.pool.close()
 
 app = FastAPI(lifespan=lifespan, title="Bodegas del Atuel API")
+
+@app.get("/", include_in_schema=False)
+async def raiz():
+    return RedirectResponse(url="/docs")
 
 # Vincular el manejador global de errores de PostgreSQL
 app.add_exception_handler(asyncpg.PostgresError, postgres_error_handler)

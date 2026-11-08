@@ -8,7 +8,16 @@ async def postgres_error_handler(request: Request, exc: asyncpg.PostgresError):
     if sqlstate == '23505': 
         return JSONResponse(status_code=409, content={"detail": "Conflicto: El registro ya existe."})
         
-    elif sqlstate in ('23503', 'P0001'):
+    elif sqlstate == '23503':
+        # Clave foránea violada: el solicitante envió una referencia (ej.
+        # id_localidad) que no existe en la BD. Es un error de su parte -> 400.
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Petición incorrecta: la referencia indicada no existe."}
+        )
+
+    elif sqlstate == 'P0001':
+        # RAISE EXCEPTION disparado por reglas de negocio en funciones/procedimientos.
         return JSONResponse(status_code=409, content={"detail": exc.message})
         
     elif sqlstate in ('23514', '23502'):
