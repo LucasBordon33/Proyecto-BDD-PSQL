@@ -1,15 +1,46 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Bodega</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catálogo de vinos</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Bienvenido al Catálogo</h1>
-    <div id="app"></div>
+  <main class="pagina">
+    <h1 class="titulo">Catálogo</h1>
 
-    <!-- Importamos el script de conexión -->
-    <script src="api.js"></script>
+    <div class="herramientas">
+      <form class="buscador" role="search" action="#">
+        <label class="solo-lectores" for="buscar">Buscar vino</label>
+        <svg class="buscador__icono" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="3.5"/>
+          <path d="M15 15l6 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+        <input id="buscar" type="search" name="q" placeholder="Buscar vino">
+      </form>
+
+      <button class="filtro" type="button" aria-label="Filtrar vinos">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 5h18M3 12h18M3 19h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="8" cy="5" r="2.4" fill="currentColor"/>
+          <circle cx="16" cy="12" r="2.4" fill="currentColor"/>
+          <circle cx="8" cy="19" r="2.4" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+
+<ul class="lista" id="contenedor-vinos">
+      <!-- Los vinos que envíe el backend se inyectan acá dinámicamente -->
+    </ul>
+
+    <nav class="paginacion" aria-label="Paginación">
+      <ul>
+        <li><a href="#" rel="prev">Anterior</a></li>
+        <li><span aria-current="page">Página 1</span></li>
+        <li><a href="#" rel="next">Siguiente</a></li>
+      </ul>
+    </nav>
+  </main>
 </body>
 </html>

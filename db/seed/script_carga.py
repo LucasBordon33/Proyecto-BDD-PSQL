@@ -1,25 +1,28 @@
-"""Carga masiva de datos para la BD 'Bodegas del Atuel'.
-
-- Reinicia TODAS las tablas del esquema public (TRUNCATE ... RESTART IDENTITY
-  CASCADE) antes de cargar, por lo que el script es IDEMPOTENTE: puede
-  re-ejecutarse sin choques de PK/UNIQUE y sin que las secuencias IDENTITY
-  queden desplazadas por corridas fallidas (los CSV referencian ids fijos,
-  ej. id_provincia=1). El reinicio es transaccional: si la carga falla, el
-  rollback lo revierte y la próxima corrida lo repite igual.
-- Carga los catálogos CSV y genera datos masivos con Faker (semilla fija 2026).
-- Mantiene TODOS los triggers activos: el stock de salas se llena por
-  CROSS JOIN (10.000 uds por celda sala x vino) y los descuentos de los
-  comprobantes se aplican con un UPDATE al final, cuando ya existen todos
-  los renglones.
-"""
 import os
 import random
+from pathlib import Path
+
 from dotenv import load_dotenv
 import psycopg 
 from faker import Faker
 from datetime import timedelta
 
 load_dotenv()
+
+# Rutas absolutas a los CSV: hace al script independiente del directorio
+# desde donde se invoque (antes fallaba con FileNotFoundError si no se
+# corría desde la raíz del proyecto).
+BASE_DIR = Path(__file__).resolve().parent  # .../db/seed
+CSV_DIR = BASE_DIR / "csv"
+
+# El .env define DB_HOST=db: ese hostname SOLO resuelve dentro de la red
+# interna de Docker (el servicio 'db' del compose). Ejecutado desde el host,
+# la resolución falla con "getaddrinfo failed", así que apuntamos a
+# localhost, donde compose publica el 5432. Dentro de un contenedor
+# (/.dockerenv) se respeta el valor original del .env.
+if os.getenv("DB_HOST", "db") in ("", "db") and not os.path.exists("/.dockerenv"):
+    os.environ["DB_HOST"] = "localhost"
+    print("DB_HOST='db' no es resoluble fuera de Docker: se usa 'localhost'.")
 
 SEMILLA = 2026
 fake = Faker('es_AR')
@@ -361,15 +364,18 @@ if __name__ == "__main__":
                 """)
                 print("Tablas del esquema public reiniciadas (TRUNCATE ... RESTART IDENTITY).")
 
-                cargar_csv(cur, 'cepa', 'nombre, tipo', 'db/seed/csv/cepas.csv')
-                cargar_csv(cur, 'maridaje', 'nombre, temperatura', 'db/seed/csv/maridajes.csv')
-                cargar_csv(cur, 'provincia', 'nombre', 'db/seed/csv/provincias.csv')
-                cargar_csv(cur, 'departamento', 'id_provincia, nombre_departamento', 'db/seed/csv/departamentos.csv')
-                cargar_csv(cur, 'localidad', 'nombre, id_provincia, codigo_postal, encargado_localidad', 'db/seed/csv/localidades.csv')
+                cargar_csv(cur, 'cepa', 'nombre, tipo', str(CSV_DIR / 'cepas.csv'))
+                cargar_csv(cur, 'maridaje', 'nombre, temperatura', str(CSV_DIR / 'maridajes.csv'))
+                cargar_csv(cur, 'provincia', 'nombre', str(CSV_DIR / 'provincias.csv'))
+                cargar_csv(cur, 'departamento', 'id_provincia, nombre_departamento', str(CSV_DIR / 'departamentos.csv'))
+                cargar_csv(cur, 'localidad', 'nombre, id_provincia, codigo_postal, encargado_localidad', str(CSV_DIR / 'localidades.csv'))
 
                 generar_datos_produccion(cur)
             conn.commit()
             print("Proceso finalizado. Base de datos poblada exitosamente.")
 
+    except psycopg.OperationalError as e:
+        print(f"Error de conexión a la base de datos: {e}")
+        print("Pistas: ¿ejecutaste 'docker compose up -d'? ¿DB_HOST/DB_PORT del .env son correctos?")
     except Exception as e:
         print(f"Error durante la ejecución: {e}")
