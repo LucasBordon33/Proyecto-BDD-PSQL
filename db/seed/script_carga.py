@@ -1,3 +1,17 @@
+"""Carga masiva de datos para la BD 'Bodegas del Atuel'.
+
+- Reinicia TODAS las tablas del esquema public (TRUNCATE ... RESTART IDENTITY
+  CASCADE) antes de cargar, por lo que el script es IDEMPOTENTE: puede
+  re-ejecutarse sin choques de PK/UNIQUE y sin que las secuencias IDENTITY
+  queden desplazadas por corridas fallidas (los CSV referencian ids fijos,
+  ej. id_provincia=1). El reinicio es transaccional: si la carga falla, el
+  rollback lo revierte y la próxima corrida lo repite igual.
+- Carga los catálogos CSV y genera datos masivos con Faker (semilla fija 2026).
+- Mantiene TODOS los triggers activos: el stock de salas se llena por
+  CROSS JOIN (10.000 uds por celda sala x vino) y los descuentos de los
+  comprobantes se aplican con un UPDATE al final, cuando ya existen todos
+  los renglones.
+"""
 import os
 import random
 from dotenv import load_dotenv
@@ -330,6 +344,23 @@ if __name__ == "__main__":
         ) as conn:
             with conn.cursor() as cur:
                 print("Iniciando carga de datos...")
+
+                # Reinicio total e idempotente: TRUNCATE dinámico de todas las
+                # tablas del esquema public (pg_tables no incluye vistas).
+                # CASCADE cubre las dependencias por FK y RESTART IDENTITY
+                # deja todas las secuencias en 1 para que los ids coincidan
+                # con lo que esperan los CSV y los tests.
+                cur.execute("""
+                    DO $$
+                    DECLARE r RECORD;
+                    BEGIN
+                        FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'public' LOOP
+                            EXECUTE format('TRUNCATE TABLE public.%I RESTART IDENTITY CASCADE', r.tablename);
+                        END LOOP;
+                    END $$;
+                """)
+                print("Tablas del esquema public reiniciadas (TRUNCATE ... RESTART IDENTITY).")
+
                 cargar_csv(cur, 'cepa', 'nombre, tipo', 'db/seed/csv/cepas.csv')
                 cargar_csv(cur, 'maridaje', 'nombre, temperatura', 'db/seed/csv/maridajes.csv')
                 cargar_csv(cur, 'provincia', 'nombre', 'db/seed/csv/provincias.csv')

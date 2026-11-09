@@ -25,8 +25,13 @@ build-backend = "uv_build"
 
 # Grupo de desarrollo (PEP 735): `uv sync` lo instala por defecto y el
 # Dockerfile lo excluye con `uv sync --no-dev`.
+# - pytest / httpx: suite de pruebas (tests/)
+# - psycopg[binary] / faker / python-dotenv: carga masiva (db/seed/script_carga.py)
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
     "pytest>=9.2.0",
+    "psycopg[binary]>=3.2",
+    "faker>=40.0.0",
+    "python-dotenv>=1.0.0",
 ]
