@@ -33,5 +33,14 @@ services:
         condition: service_healthy
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
+  frontend:
+    build: ./front
+    ports:
+      - "8080:80" 
+    depends_on:
+      - api # Asegura que levante después de la FastAPI
+
 volumes:
   pgdata:
+
+  
