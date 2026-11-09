@@ -198,6 +198,55 @@ body {
   text-decoration: underline;
 }
 
+/* Panel de Filtros */
+.panel-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.5rem;
+  background: #f9f9f9;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 12px;
+  align-items: flex-end;
+}
+
+.grupo-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 120px;
+}
+
+.grupo-filtro label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.grupo-filtro input, .grupo-filtro select {
+  height: var(--alto-control);
+  padding: 0 0.75rem;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.btn-primario, .btn-secundario {
+  height: var(--alto-control);
+  padding: 0 1.5rem;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-primario { background: var(--tinta); color: var(--papel); }
+.btn-secundario { background: transparent; color: var(--tinta); }
+.btn-primario:hover { opacity: 0.8; }
+
 /* Pantallas pequeñas */
 @media (max-width: 30rem) {
   .pagina { padding-inline: 1rem; }

@@ -3,6 +3,9 @@ let paginaActual = 1;
 const LIMITE_POR_PAGINA = 9;
 let busquedaActual = ""; 
 
+// Agregamos objeto para los filtros
+let filtrosActuales = { tipo: "", cepa: "", bodega: "", anada: "" };
+
 // --- LÓGICA DEL CATÁLOGO ---
 async function cargarCatalogo() {
     const contenedor = document.getElementById('contenedor-vinos');
@@ -10,15 +13,19 @@ async function cargarCatalogo() {
 
     const offset = (paginaActual - 1) * LIMITE_POR_PAGINA;
     
-    // Armamos la URL base con la paginación
+    // Armamos la URL base
     let url = `/v1/api/vinos?limit=${LIMITE_POR_PAGINA}&offset=${offset}`;
     
-    // Si hay texto en el buscador, lo sumamos a la petición
-    if (busquedaActual.trim() !== "") {
-        url += `&nombre=${encodeURIComponent(busquedaActual)}`;
-    }
+    // Sumamos la búsqueda
+    if (busquedaActual.trim() !== "") url += `&nombre=${encodeURIComponent(busquedaActual)}`;
+    
+    // Sumamos los filtros dinámicamente si tienen valor
+    if (filtrosActuales.tipo) url += `&tipo=${encodeURIComponent(filtrosActuales.tipo)}`;
+    if (filtrosActuales.cepa) url += `&cepa=${encodeURIComponent(filtrosActuales.cepa)}`;
+    if (filtrosActuales.bodega) url += `&bodega=${encodeURIComponent(filtrosActuales.bodega)}`;
+    if (filtrosActuales.anada) url += `&anada=${encodeURIComponent(filtrosActuales.anada)}`;
 
-    const vinos = await fetchAPI(url); 
+    const vinos = await fetchAPI(url);
     
     if (!vinos) {
         contenedor.innerHTML = "<p>Error al cargar los vinos.</p>";
@@ -66,12 +73,50 @@ function actualizarControlesPaginacion(cantidadVinosObtenidos) {
     });
 }
 
-// --- ESCUCHADOR DEL BUSCADOR ---
 const inputBuscador = document.querySelector('.buscador input');
 if (inputBuscador) {
     inputBuscador.addEventListener('input', (e) => {
         busquedaActual = e.target.value;
-        paginaActual = 1; // Al buscar, siempre volvemos a la página 1
+        paginaActual = 1; 
+        cargarCatalogo();
+    });
+}
+
+// Lógica de visualización del panel de filtros
+const btnFiltroToggle = document.querySelector('.filtro');
+const panelFiltros = document.getElementById('panel-filtros');
+
+if (btnFiltroToggle) {
+    btnFiltroToggle.addEventListener('click', () => {
+        // Alterna entre mostrar u ocultar el panel
+        panelFiltros.style.display = panelFiltros.style.display === 'none' ? 'flex' : 'none';
+    });
+}
+
+// Botón Aplicar Filtros
+const btnAplicar = document.getElementById('btn-aplicar-filtros');
+if (btnAplicar) {
+    btnAplicar.addEventListener('click', () => {
+        filtrosActuales.tipo = document.getElementById('filtro-tipo').value;
+        filtrosActuales.cepa = document.getElementById('filtro-cepa').value;
+        filtrosActuales.bodega = document.getElementById('filtro-bodega').value;
+        filtrosActuales.anada = document.getElementById('filtro-anada').value;
+        paginaActual = 1; // Volver a la pag 1 al filtrar
+        cargarCatalogo();
+    });
+}
+
+// Botón Limpiar Filtros
+const btnLimpiar = document.getElementById('btn-limpiar-filtros');
+if (btnLimpiar) {
+    btnLimpiar.addEventListener('click', () => {
+        document.getElementById('filtro-tipo').value = "";
+        document.getElementById('filtro-cepa').value = "";
+        document.getElementById('filtro-bodega').value = "";
+        document.getElementById('filtro-anada').value = "";
+        
+        filtrosActuales = { tipo: "", cepa: "", bodega: "", anada: "" };
+        paginaActual = 1;
         cargarCatalogo();
     });
 }

@@ -30,6 +30,33 @@
       </button>
     </div>
 
+<!-- Panel de Filtros -->
+    <div id="panel-filtros" class="panel-filtros" style="display: none;">
+      <div class="grupo-filtro">
+        <label for="filtro-tipo">Tipo</label>
+        <select id="filtro-tipo">
+          <option value="">Todos</option>
+          <option value="tinto">Tinto</option>
+          <option value="blanco">Blanco</option>
+          <option value="rosado">Rosado</option>
+        </select>
+      </div>
+      <div class="grupo-filtro">
+        <label for="filtro-cepa">Cepa</label>
+        <input type="text" id="filtro-cepa" placeholder="Ej. Malbec">
+      </div>
+      <div class="grupo-filtro">
+        <label for="filtro-bodega">Bodega (CUIT)</label>
+        <input type="text" id="filtro-bodega" placeholder="Ej. 30-11111111-1">
+      </div>
+      <div class="grupo-filtro">
+        <label for="filtro-anada">Añada</label>
+        <input type="number" id="filtro-anada" placeholder="Ej. 2022">
+      </div>
+      <button id="btn-aplicar-filtros" class="btn-primario">Aplicar</button>
+      <button id="btn-limpiar-filtros" class="btn-secundario">Limpiar</button>
+    </div>
+    
 <!-- Paginación Arriba -->
     <nav class="paginacion" aria-label="Paginación superior" style="margin-top: 2rem; margin-bottom: 2rem;">
       <ul>
