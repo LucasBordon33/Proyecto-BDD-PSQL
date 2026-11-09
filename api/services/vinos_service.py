@@ -3,8 +3,8 @@ from fastapi import HTTPException
 from api.models.schemas import VinoCreate, VinoUpdate
 from api.repositories import vinos_repo
 
-async def obtener_catalogo(pool: asyncpg.Pool, limit: int, offset: int, tipo: str | None, cepa: str | None, bodega: str | None, anada: int | None) -> list[dict]:
-    return await vinos_repo.get_vinos_catalogo(pool, limit, offset, tipo, cepa, bodega, anada)
+async def obtener_catalogo(pool, limit: int, offset: int, tipo: str | None, cepa: str | None, bodega: str | None, anada: int | None, nombre: str | None = None):
+    return await vinos_repo.get_vinos_catalogo(pool, limit, offset, tipo, cepa, bodega, anada, nombre)
 
 async def obtener_detalle_vino(pool: asyncpg.Pool, codigo_vino: str) -> dict:
     vino = await vinos_repo.get_vino_detalle(pool, codigo_vino)

@@ -7,15 +7,16 @@ router = APIRouter(prefix="/v1/api/vinos", tags=["Vinos"])
 @router.get("")
 async def catalogo_vinos(
     request: Request,
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(9, ge=1, le=100),
     offset: int = Query(0, ge=0),
     tipo: str | None = None,
     cepa: str | None = None,
     bodega: str | None = None,
-    anada: int | None = None
+    anada: int | None = None,
+    nombre: str | None = None  
 ):
     pool = request.app.state.pool
-    return await vinos_service.obtener_catalogo(pool, limit, offset, tipo, cepa, bodega, anada)
+    return await vinos_service.obtener_catalogo(pool, limit, offset, tipo, cepa, bodega, anada, nombre)
 
 @router.get("/{cod}")
 async def detalle_vino(request: Request, cod: str):

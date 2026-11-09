@@ -1,9 +1,13 @@
 import asyncpg
 
-async def get_vinos_catalogo(pool: asyncpg.Pool, limit: int, offset: int, tipo: str | None, cepa: str | None, bodega: str | None, anada: int | None) -> list[dict]:
+async def get_vinos_catalogo(pool: asyncpg.Pool, limit: int, offset: int, tipo: str | None, cepa: str | None, bodega: str | None, anada: int | None, nombre: str | None = None) -> list[dict]:
     query = "SELECT DISTINCT v.codigo_vino, v.nombre, v.tipo, v.anada, v.cuit_bodega, v.precio FROM vino v "
     args = []
     where_clauses = []
+
+    if nombre:
+        args.append(f"%{nombre}%")
+        where_clauses.append(f"v.nombre ILIKE ${len(args)}")
 
     if cepa:
         query += "JOIN vino_cepa vc ON v.codigo_vino = vc.codigo_vino JOIN cepa c ON vc.id_cepa = c.id_cepa "
