@@ -33,7 +33,7 @@ body {
 }
 
 .pagina {
-  max-width: 43rem;
+  max-width: 70rem; 
   margin: 0 auto;
   padding: 2rem 1.5rem 3.5rem;
 }
@@ -109,28 +109,36 @@ body {
 
 /* Lista de vinos */
 .lista {
-  margin: 5rem 0 0;
+  margin: 3rem 0 0;
   padding: 0;
   list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem 1.5rem;
 }
 
 .vino {
   display: flex;
-  align-items: flex-start;
-  gap: 1.75rem;
-  padding-left: 2.75rem;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 1rem;
+  border: var(--trazo) solid #eaeaea;
+  border-radius: 12px;
+  background: var(--papel);
 }
 
 .vino + .vino {
-  margin-top: 5rem;
+  margin-top: 0;
 }
 
 .vino__botella {
   display: block;
   flex: none;
+  height: 14rem;
   width: auto;
-  height: 16.25rem;
   aspect-ratio: 101 / 400;
+  object-fit: contain;
 }
 
 .vino__datos {
@@ -193,9 +201,15 @@ body {
 /* Pantallas pequeñas */
 @media (max-width: 30rem) {
   .pagina { padding-inline: 1rem; }
-  .lista { margin-top: 3.5rem; }
-  .vino { padding-left: 1rem; gap: 1.25rem; }
-  .vino + .vino { margin-top: 3.5rem; }
+  
+  .lista { 
+    margin-top: 3.5rem; 
+    grid-template-columns: 1fr; /* Vuelve a 1 columna en celulares */
+    gap: 2rem;
+  }
+  
+  .vino { padding: 1rem; gap: 1.25rem; }
+  .vino + .vino { margin-top: 0; }
   .vino__botella { height: 13rem; }
   .vino__nombre, .vino__precio { font-size: 1.35rem; }
   .vino__enlace, .paginacion { font-size: 1.1rem; }

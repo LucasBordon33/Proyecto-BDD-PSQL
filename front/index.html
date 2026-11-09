@@ -30,15 +30,25 @@
       </button>
     </div>
 
-<ul class="lista" id="contenedor-vinos">
-      <!-- Los vinos que envíe el backend se inyectan acá dinámicamente -->
+<!-- Paginación Arriba -->
+    <nav class="paginacion" aria-label="Paginación superior" style="margin-top: 2rem; margin-bottom: 2rem;">
+      <ul>
+        <li><a href="#" class="btn-anterior" onclick="cambiarPagina(-1); return false;" rel="prev">Anterior</a></li>
+        <li><span class="texto-pagina" aria-current="page">Página 1</span></li>
+        <li><a href="#" class="btn-siguiente" onclick="cambiarPagina(1); return false;" rel="next">Siguiente</a></li>
+      </ul>
+    </nav>
+
+    <ul class="lista" id="contenedor-vinos">
+      <!-- Los vinos se inyectan acá -->
     </ul>
 
-    <nav class="paginacion" aria-label="Paginación">
+    <!-- Paginación Abajo -->
+    <nav class="paginacion" aria-label="Paginación inferior">
       <ul>
-        <li><a href="#" rel="prev">Anterior</a></li>
-        <li><span aria-current="page">Página 1</span></li>
-        <li><a href="#" rel="next">Siguiente</a></li>
+        <li><a href="#" class="btn-anterior" onclick="cambiarPagina(-1); return false;" rel="prev">Anterior</a></li>
+        <li><span class="texto-pagina" aria-current="page">Página 1</span></li>
+        <li><a href="#" class="btn-siguiente" onclick="cambiarPagina(1); return false;" rel="next">Siguiente</a></li>
       </ul>
     </nav>
   </main>
