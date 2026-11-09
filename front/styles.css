@@ -47,7 +47,7 @@ body {
   line-height: 1.1;
 }
 
-/* Buscador + botón de filtros */
+/* Buscador + botón de filtros + agregar vino*/
 .herramientas {
   display: flex;
   align-items: center;
@@ -103,6 +103,33 @@ body {
 }
 
 .filtro svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.btn-agregar-redondo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--alto-control);
+  height: var(--alto-control);
+  padding: 0;
+  border: var(--trazo) solid var(--tinta);
+  border-radius: 50%;
+  background: #502033; /* Color borravino solicitado */
+  color: #fff; /* Símbolo más en blanco para buen contraste */
+  font-size: 1.8rem;
+  font-weight: 300;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.btn-agregar-redondo:hover {
+  opacity: 0.85;
+}
+
+.btn-agregar-redondo svg {
   width: 1.75rem;
   height: 1.75rem;
 }
