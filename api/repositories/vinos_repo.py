@@ -1,4 +1,5 @@
 import asyncpg
+import json
 
 async def get_vinos_catalogo(pool: asyncpg.Pool, limit: int, offset: int, tipo: str | None, cepa: str | None, bodega: str | None, anada: int | None, nombre: str | None = None) -> list[dict]:
     query = "SELECT DISTINCT v.codigo_vino, v.nombre, v.tipo, v.anada, v.cuit_bodega, v.precio FROM vino v "
@@ -53,7 +54,13 @@ async def get_vino_detalle(pool: asyncpg.Pool, codigo_vino: str) -> dict | None:
     """
     async with pool.acquire() as conn:
         record = await conn.fetchrow(query, codigo_vino)
-        return dict(record) if record else None
+        if record:
+            vino_dict = dict(record)
+            # Parseamos el JSON de PostgreSQL a listas reales de Python
+            vino_dict['composicion'] = json.loads(vino_dict['composicion'])
+            vino_dict['maridajes'] = json.loads(vino_dict['maridajes'])
+            return vino_dict
+        return None
 
 async def insert_vino_completo(conn: asyncpg.Connection, datos: dict) -> str:
     query_vino = """

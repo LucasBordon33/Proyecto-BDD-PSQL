@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalle de vino</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 1. Agregamos la clase pagina-detalle -->
+  <main class="pagina pagina-detalle">
+    
+    <!-- 2. Botón volver al principio del main -->
+    <a class="volver" href="index.html">
+      <svg class="volver__icono" viewBox="0 0 58 55" aria-hidden="true">
+        <path d="M0 27.5L28 0v15h30v25H28v15z" fill="currentColor"/>
+      </svg>
+      Volver
+    </a>
+
+    <h1 class="titulo">Catálogo</h1>
+
+    <article class="detalle">
+      <img class="detalle__botella" src="botella-grande.png" width="295" height="1168" alt="Botella">
+
+      <!-- Columna central: Los datos restaurados -->
+      <div class="detalle__datos">
+        <h2 class="detalle__nombre">Nombre vino</h2>
+        <p class="detalle__precio">$0,00</p>
+        
+        <section class="detalle__seccion">
+          <h3>Ficha Técnica</h3>
+          <ul style="list-style: none; padding: 0; line-height: 1.8;">
+            <li><strong>Tipo:</strong> <span id="vino-tipo">Cargando...</span></li>
+            <li><strong>Añada:</strong> <span id="vino-anada">Cargando...</span></li>
+            <li><strong>Volumen:</strong> <span id="vino-volumen">Cargando...</span> ml</li>
+            <li><strong>Graduación:</strong> <span id="vino-graduacion">Cargando...</span>%</li>
+            <li><strong>Bodega (CUIT):</strong> <span id="vino-cuit">Cargando...</span></li>
+          </ul>
+        </section>
+
+        <section class="detalle__seccion">
+          <h3>Composición</h3>
+          <p id="vino-composicion">Cargando...</p>
+        </section>
+
+        <section class="detalle__seccion">
+          <h3>Maridaje</h3>
+          <p id="vino-maridaje">Cargando...</p>
+        </section>
+      </div>
+
+      <!-- Tercera columna: Botones -->
+      <div class="acciones">
+        <button class="boton" type="button">Nueva venta</button>
+        <button class="boton" type="button">Editar</button>
+      </div>
+    </article>
+  </main>
+  
+  <!-- Vinculamos la API y el nuevo script de esta pantalla -->
+  <script src="api.js"></script>
+  <script src="detalle.js"></script>
+</body>
+</html>

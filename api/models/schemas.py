@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import date
+from typing import Any
 
 """ VINOS """ 
 
@@ -35,8 +36,9 @@ class VinoUpdate(BaseModel):
 class VinoResponse(VinoBase):
     codigo_vino: str
 
-
-
+class VinoDetalleResponse(VinoResponse):
+    composicion: list[Any] = []
+    maridajes: list[Any] = []
 """ CLIENTES """ 
 
 

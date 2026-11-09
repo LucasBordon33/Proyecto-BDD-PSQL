@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request, Query, status
-from api.models.schemas import VinoCreate, VinoUpdate
+from api.models.schemas import VinoCreate, VinoUpdate, VinoDetalleResponse
 from api.services import vinos_service
 
 router = APIRouter(prefix="/v1/api/vinos", tags=["Vinos"])
@@ -18,7 +18,7 @@ async def catalogo_vinos(
     pool = request.app.state.pool
     return await vinos_service.obtener_catalogo(pool, limit, offset, tipo, cepa, bodega, anada, nombre)
 
-@router.get("/{cod}")
+@router.get("/{cod}", response_model=VinoDetalleResponse)
 async def detalle_vino(request: Request, cod: str):
     pool = request.app.state.pool
     return await vinos_service.obtener_detalle_vino(pool, cod)

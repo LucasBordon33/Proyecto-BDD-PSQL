@@ -40,7 +40,7 @@ async function cargarCatalogo() {
             <div class="vino__datos">
               <h2 class="vino__nombre">${vino.nombre}</h2>
               <p class="vino__precio">$${vino.precio}</p>
-              <a class="vino__enlace" href="#">Ver más información</a>
+              <a class="vino__enlace" href="detalle.html?codigo_vino=${vino.codigo_vino}">Ver más información</a>
             </div>
           </li>
         `;
