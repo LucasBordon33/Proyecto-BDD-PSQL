@@ -12,7 +12,7 @@ async function cargarCatalogo() {
     contenedor.innerHTML = "<p>Cargando catálogo...</p>";
 
     // Llamada a tu endpoint en FastAPI
-    const vinos = await fetchAPI('/vinos'); 
+    const vinos = await fetchAPI('/v1/api/vinos'); 
     
     if (!vinos) {
         contenedor.innerHTML = "<p>Error al cargar los vinos desde el servidor.</p>";

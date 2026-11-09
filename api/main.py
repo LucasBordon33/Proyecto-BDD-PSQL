@@ -11,6 +11,7 @@ from api.routes.transferencias_routes import router as transferencias_router
 from api.routes.ingresos_routes import router as ingresos_router
 from api.routes.reportes import router as reportes_router
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,6 +20,20 @@ async def lifespan(app: FastAPI):
     await app.state.pool.close()
 
 app = FastAPI(lifespan=lifespan, title="Bodegas del Atuel API")
+
+# Permitir que el frontend (puerto 8080) se comunique con la API
+origenes_permitidos = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origenes_permitidos,
+    allow_credentials=True,
+    allow_methods=["*"], # Permite GET, POST, PUT, DELETE, etc.
+    allow_headers=["*"], # Permite cualquier encabezado
+)
 
 @app.get("/", include_in_schema=False)
 async def raiz():
