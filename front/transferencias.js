@@ -68,7 +68,7 @@ function renderizarTransferencias() {
         const numeroOriginal = t.numero_transferencia || t.nro_transferencia || t.id;
         const numeroPad = String(numeroOriginal).padStart(4, '0');
         const fecha = t.fecha_confeccion || t.fecha || '00/00/00';
-        const sala = t.sala_destino || t.nombre_sala || 'Sin sala asignada';
+        const sala = t.nombre_sala || t.sala_destino || (t.id_sala ? `Sala N° ${t.id_sala}` : 'Sin sala asignada');
         
         const estadoCod = t.estado ? t.estado.toLowerCase() : 'desconocido';
         const estadoTexto = estadoCod.replace('_', ' ').toUpperCase();
