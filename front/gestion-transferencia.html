@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestionar Transferencia</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="pagina pagina--ancha">
+    <h1 class="titulo">Gestión de Transferencia</h1>
+
+    <div class="error" id="caja-error" style="display: none;"></div>
+
+    <form class="transferencia" action="#">
+      <!-- Columna Izquierda: Informe -->
+      <section class="informe">
+        <h2 class="informe__titulo">Informe</h2>
+        <div class="informe__campos" style="padding: 1.5rem;">
+          
+          <div style="display: grid; gap: 0.5rem; margin-bottom: 1.2rem;">
+            <label for="nro-transferencia" style="font-weight: bold; color: var(--placeholder);">Número</label>
+            <input class="entrada" id="nro-transferencia" type="text" disabled style="background: #f3f4f6;">
+          </div>
+          
+          <div style="display: grid; gap: 0.5rem; margin-bottom: 1.2rem;">
+            <label for="fecha-transferencia" style="font-weight: bold; color: var(--placeholder);">Fecha de confección</label>
+            <input class="entrada" id="fecha-transferencia" type="text" disabled style="background: #f3f4f6;">
+          </div>
+
+          <div style="display: grid; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <label for="sala-destino" style="font-weight: bold; color: var(--placeholder);">Sala solicitante</label>
+            <input class="entrada" id="sala-destino" type="text" disabled style="background: #f3f4f6;">
+          </div>
+
+          <div style="display: grid; gap: 0.5rem;">
+            <label for="estado-transferencia" style="font-weight: bold; color: var(--placeholder);">Estado actual</label>
+            <input class="entrada" id="estado-transferencia" type="text" disabled style="font-weight: bold;">
+          </div>
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Vinos solicitados -->
+      <section>
+        <h2 style="font-size: 1.6rem; margin-top: 0; margin-bottom: 1.5rem;">Detalle del pedido</h2>
+        
+        <!-- Buscador de vinos (Se oculta si no está en confección) -->
+        <div id="seccion-agregar-vino" style="display: none; align-items: center; border: 3px solid var(--tinta); border-radius: 999px; padding: 0.3rem 0.4rem 0.3rem 1.2rem; background: var(--papel); position: relative; margin-bottom: 2rem;">
+          <input id="buscar-vino" type="search" placeholder="Buscar vino por código o nombre..." autocomplete="off" style="flex: 1; border: none; outline: none; background: transparent; font-size: 1.1rem; min-width: 0;">
+          <ul class="items" id="lista-vinos" style="display: none; position: absolute; width: 100%; top: 100%; left: 0; background: #fff; z-index: 20; border: 2px solid var(--tinta); border-radius: 8px; max-height: 200px; overflow-y: auto; margin-top: 8px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></ul>
+          <div style="width: 2px; height: 2rem; background: var(--tinta); margin: 0 0.5rem;"></div>
+          <input id="cantidad-vino" type="number" min="1" placeholder="Cant." style="width: 5rem; text-align: center; border: none; outline: none; background: transparent; font-size: 1.1rem; font-weight: bold;">
+          <button id="btn-add-renglon" type="button" style="display: grid; place-items: center; width: 2.8rem; height: 2.8rem; border-radius: 50%; background: var(--vino); color: white; border: none; font-size: 1.8rem; cursor: pointer; line-height: 1; margin-left: 0.5rem; flex: none;">+</button>
+        </div>
+
+        <ul id="lista-renglones" class="renglones" style="margin-top: 1rem; min-height: 10rem;">
+          <!-- Se inyectan desde JS -->
+        </ul>
+      </section>
+
+      <!-- Botones de Acción (Dinámicos según el estado) -->
+      <div class="botones botones--tres" style="grid-column: 1 / -1; margin-top: 2rem; border-top: 2px solid #ccc; padding-top: 2rem;" id="contenedor-botones">
+        <!-- JS inyectará los botones correspondientes aquí -->
+      </div>
+    </form>
+  </main>
+
+  <script src="api.js"></script>
+  <script src="gestion-transferencia.js"></script>
+</body>
+</html>

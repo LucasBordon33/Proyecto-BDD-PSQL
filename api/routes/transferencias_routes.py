@@ -42,3 +42,12 @@ async def procesar_transferencia(request: Request, nro: int):
 async def obtener_transferencias(request: Request, limit: int = 100, offset: int = 0):
     pool = request.app.state.pool
     return await transferencias_service.listar_transferencias(pool, limit, offset)
+
+
+@router.get("/{nro}")
+async def obtener_transferencia_detalle(request: Request, nro: int):
+    """
+    Devuelve los detalles de una transferencia específica, incluyendo sus renglones.
+    """
+    pool = request.app.state.pool
+    return await transferencias_service.obtener_transferencia(pool, nro)

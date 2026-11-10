@@ -35,3 +35,12 @@ async def procesar_transferencia(pool: asyncpg.Pool, nro_transferencia: int) -> 
 
 async def listar_transferencias(pool: asyncpg.Pool, limit: int = 100, offset: int = 0) -> list:
     return await transferencias_repo.get_todas_transferencias(pool, limit, offset)
+
+async def obtener_transferencia(pool: asyncpg.Pool, nro_transferencia: int) -> dict:
+    transfer = await transferencias_repo.get_transferencia_por_nro(pool, nro_transferencia)
+    if not transfer:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No se encontró la transferencia N° {nro_transferencia}."
+        )
+    return transfer
