@@ -418,3 +418,237 @@ body {
   .detalle__precio { margin-bottom: 2rem; font-size: 1.3rem; }
   .boton { height: 3.6rem; font-size: 1.4rem; flex: 1; }
 }
+
+
+/* ===== Edición de vino ===== */
+:root {
+  --error: #d32f2f;
+  --gris-foto: #a6a6a6;
+  --radio-izq: 0.9rem;
+}
+
+.pagina--ancha {
+  max-width: 72rem;
+  padding-top: 2rem;
+}
+
+/* ¡Esta regla soluciona el botón descentrado de la pantalla anterior! */
+.boton {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.edicion {
+  display: grid;
+  gap: 1.25rem 2.5rem;
+  align-items: start;
+}
+
+/* Foto */
+.foto {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 14.5rem;
+  aspect-ratio: 1;
+  justify-self: center;
+  background: var(--gris-foto);
+  border-radius: 1.2rem;
+}
+
+.foto__botella {
+  display: block;
+  width: auto;
+  height: 12.2rem;
+}
+
+.foto__editar {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.6rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  cursor: pointer;
+}
+
+.foto__editar svg {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.foto:has(input:focus-visible) {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}
+
+/* Campos de texto */
+.campos {
+  display: grid;
+  gap: 1rem;
+}
+
+.entrada {
+  width: 100%;
+  height: 3rem;
+  padding: 0 1.5rem 0 1.1rem;
+  border: 3px solid var(--tinta);
+  border-radius: var(--radio-izq) 999px 999px var(--radio-izq);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1rem;
+}
+
+.entrada::placeholder,
+.item__entrada::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+/* Cepas y maridajes */
+.listas {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.desplegable__titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3.5rem;
+  padding: 0 0.65rem 0 1.1rem;
+  border: 4px solid var(--tinta);
+  border-radius: var(--radio-izq) 999px 999px var(--radio-izq);
+  color: var(--placeholder);
+  font-size: 1.4rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.desplegable__titulo::-webkit-details-marker {
+  display: none;
+}
+
+.desplegable__flecha {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--tinta);
+  border-radius: 0.5rem;
+  color: var(--tinta);
+}
+
+.desplegable__flecha svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.items {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  padding: 0 0.6rem 0 0.9rem;
+  border: 2px solid var(--tinta);
+  border-radius: var(--radio-izq) 999px 999px var(--radio-izq);
+  color: var(--placeholder);
+  font-size: 0.95rem;
+}
+
+.item:focus-within {
+  outline: 3px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+.item__texto {
+  flex: 1;
+}
+
+.item__entrada {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--tinta);
+  font: inherit;
+}
+
+.item__boton {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1.5px solid var(--tinta);
+  border-radius: 0.2rem;
+  background: var(--papel);
+  color: var(--tinta);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Error y botones */
+.error {
+  justify-self: center;
+  width: min(100%, 31rem);
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border: 2px solid var(--error);
+  color: var(--error);
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.botones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  justify-self: center;
+  width: min(100%, 42rem);
+}
+
+.botones .boton {
+  height: 3.75rem;
+  font-size: 1.5rem;
+}
+
+/* Vista horizontal: foto a la izquierda, datos a la derecha */
+@media (min-width: 40rem) {
+  .edicion { grid-template-columns: 14.5rem minmax(0, 1fr); }
+  .foto { grid-row: 1 / span 2; }
+  .campos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .entrada--completa { grid-column: 1 / -1; }
+  .listas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .error, .botones { grid-column: 1 / -1; }
+}
+
+/* Pantallas anchas: foto | datos | cepas y maridajes */
+@media (min-width: 64rem) {
+  .edicion { grid-template-columns: 14.5rem minmax(0, 1fr) minmax(0, 21rem); }
+  .foto { grid-row: auto; }
+  .listas { grid-template-columns: 1fr; }
+}
+
+/* Móvil en horizontal (poca altura) */
+@media (orientation: landscape) and (max-height: 32rem) {
+  .pagina--ancha { padding-block: 1rem; }
+  .edicion { gap: 1rem 1.5rem; }
+  .botones .boton { height: 3.25rem; }
+}

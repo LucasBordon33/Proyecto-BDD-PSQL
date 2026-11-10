@@ -26,7 +26,6 @@ async function cargarDetalleVino() {
     document.getElementById('vino-anada').innerText = vino.anada; 
     document.getElementById('vino-volumen').innerText = vino.volumen_ml; 
     document.getElementById('vino-graduacion').innerText = vino.graduacion; 
-    // NUEVA LÍNEA: Inyectamos el CUIT de la bodega
     document.getElementById('vino-cuit').innerText = vino.cuit_bodega;
     
     // Inyectamos la Composición (Cepas)
@@ -48,6 +47,8 @@ async function cargarDetalleVino() {
     } else {
         contenedorMaridaje.innerText = "Sin sugerencias de maridaje."; 
     }
+    
+    document.getElementById('btn-editar').href = `editar.html?codigo_vino=${codigoVino}`;
 }
 
 cargarDetalleVino(); 

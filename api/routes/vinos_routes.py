@@ -37,3 +37,5 @@ async def modificar_vino(request: Request, cod: str, vino_in: VinoUpdate):
 async def borrar_vino(request: Request, cod: str):
     pool = request.app.state.pool
     return await vinos_service.eliminar_vino(pool, cod)
+
+    
