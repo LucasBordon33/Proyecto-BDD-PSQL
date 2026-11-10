@@ -35,7 +35,7 @@ done
 docker exec bdd_db pg_isready -U postgres -d bodega
 ```
 
-## 3. Crear roles de aplicación (una sola vez)
+## 3. Crear roles de aplicación 
 
 ```bash
 set +H
@@ -99,6 +99,52 @@ python -m http.server 8080
 - **Frontend:** `http://localhost:8080/` → catálogo de vinos
 
 > El catálogo empieza vacío: las migraciones solo crean la estructura. Usa la API o el frontend para insertar vinos, clientes, bodegas, etc.
+
+## Ejemplo
+
+# Insertar bodega
+
+```bash
+
+docker exec bdd_db psql -U postgres -d bodega -c "
+INSERT INTO bodega(cuit, razon_social, domicilio)
+VALUES ('20123456789', 'Bodega Prueba', 'Calle Falsa 123')
+ON CONFLICT (cuit) DO NOTHING;
+"
+
+```
+
+# Insertar cepa
+
+```bash
+
+docker exec bdd_db psql -U postgres -d bodega -c "
+INSERT INTO cepa(nombre, tipo)
+VALUES ('Malbec Prueba', 'tinta')
+RETURNING id_cepa, nombre, tipo;
+"
+
+```
+
+# Insertar vino ejemplo 
+
+
+```bash
+curl -X POST http://localhost:8000/v1/api/vinos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "codigo_vino": "VT-TEST",
+    "nombre": "Vino Prueba",
+    "tipo": "tinto",
+    "anada": 2023,
+    "volumen_ml": 750,
+    "graduacion": 14.0,
+    "precio": 3000.00,
+    "cuit_bodega": "20123456789",
+    "cepas": [{"id_cepa": 1, "porcentaje": 100}],
+    "maridajes": []
+  }'
+```
 
 ## Detener y limpiar
 
