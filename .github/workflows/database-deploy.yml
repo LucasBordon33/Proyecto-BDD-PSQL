@@ -31,22 +31,22 @@ jobs:
 
       - name: Ejecutar migraciones (Flyway)
         run: >
-          docker run --rm --network host
+          docker run --rm
           -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
-          -url=jdbc:postgresql://localhost:5432/bodega
+          -url=jdbc:postgresql://postgres:5432/bodega
           -user=postgres
           -password=postgres
           migrate
 
       - name: Validar migraciones (Flyway validate)
         run: >
-          docker run --rm --network host
+          docker run --rm
           -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
-          -url=jdbc:postgresql://localhost:5432/bodega
+          -url=jdbc:postgresql://postgres:5432/bodega
           -user=postgres
           -password=postgres
           validate
