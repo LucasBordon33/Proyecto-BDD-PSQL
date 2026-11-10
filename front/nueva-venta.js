@@ -357,17 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 timeoutBusquedaVino = setTimeout(async () => {
                     try {
-                        // Traemos el catálogo completo una sola vez
-                        if (todosLosVinos.length === 0) {
-                            const res = await fetchAPI(`/v1/api/vinos?limit=100&offset=0`);
-                            if (res) todosLosVinos = res;
-                        }
-
-                        // Filtramos ultra rápido en JavaScript por nombre o por código
-                        const resultados = todosLosVinos.filter(v => 
-                            v.nombre.toLowerCase().includes(texto) || 
-                            (v.codigo_vino && v.codigo_vino.toLowerCase().includes(texto))
-                        ).slice(0, 10);
+                        // Llamamos directamente al backend pasándole lo que el usuario escribió
+                        const resultados = await fetchAPI(`/v1/api/vinos?nombre=${encodeURIComponent(texto)}&limit=10&offset=0`);
 
                         listaResultados.innerHTML = '';
                         if (resultados && resultados.length > 0) {
@@ -375,6 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const li = document.createElement('li');
                                 li.className = 'item';
                                 li.innerHTML = `<button class="item__opcion" type="button" style="text-align: left;">${v.nombre} - $${v.precio}</button>`;
+                                
                                 li.querySelector('button').addEventListener('click', () => {
                                     inputBusqueda.value = v.nombre;
                                     inputBusqueda.dataset.codigo = v.codigo_vino; 
@@ -390,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             listaResultados.style.display = 'none';
                         }
                     } catch (error) { 
-                        console.error(error); 
+                        console.error("Error en la búsqueda:", error); 
                     }
                 }, 200);
             });
