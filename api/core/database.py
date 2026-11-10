@@ -11,6 +11,7 @@ async def create_db_pool() -> asyncpg.Pool:
         database=settings.postgres_db,
         min_size=settings.db_pool_min_size,
         max_size=settings.db_pool_max_size,
-        command_timeout=settings.db_command_timeout
+        command_timeout=settings.db_command_timeout,
+        ssl=settings.ssl_context()
     )
 
