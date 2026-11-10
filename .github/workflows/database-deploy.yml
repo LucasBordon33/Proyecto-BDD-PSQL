@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
 
 jobs:
   pruebas:
@@ -18,11 +19,7 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         ports:
           - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }}"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+        options: --health-cmd "pg_isready -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }}" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DB_HOST: localhost
       DB_PORT: "5432"
@@ -30,13 +27,12 @@ jobs:
       DB_USER: ${{ secrets.POSTGRES_USER }}
       DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Ejecutar migraciones (Flyway)
         run: >
           docker run --rm --network host
-          -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
           -url=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
@@ -47,7 +43,7 @@ jobs:
       - name: Validar migraciones (Flyway validate)
         run: >
           docker run --rm --network host
-          -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
           -url=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
@@ -72,13 +68,12 @@ jobs:
     needs: pruebas
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Migrar base de datos productiva (endpoint directo, sin pooler)
         run: >
           docker run --rm
-          -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
           -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require"
@@ -89,7 +84,7 @@ jobs:
       - name: Verificar éxito del despliegue (Flyway validate)
         run: >
           docker run --rm
-          -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
           -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require"
