@@ -95,3 +95,18 @@ async def get_transferencia_por_nro(pool: asyncpg.Pool, nro_transferencia: int) 
         resultado["renglones"] = [dict(r) for r in renglones]
         
         return resultado
+
+async def delete_renglon(pool: asyncpg.Pool, nro_transferencia: int, codigo_vino: str):
+    query = "DELETE FROM transferencia_vino WHERE nro_transferencia = $1 AND codigo_vino = $2;"
+    async with pool.acquire() as conn:
+        await conn.execute(query, nro_transferencia, codigo_vino)
+
+async def update_cantidad_renglon(pool: asyncpg.Pool, nro_transferencia: int, codigo_vino: str, cantidad: int):
+    query = "UPDATE transferencia_vino SET cantidad = $1 WHERE nro_transferencia = $2 AND codigo_vino = $3;"
+    async with pool.acquire() as conn:
+        await conn.execute(query, cantidad, nro_transferencia, codigo_vino)
+
+async def update_sala_transferencia(pool: asyncpg.Pool, nro_transferencia: int, id_sala: int):
+    query = "UPDATE transferencia SET id_sala = $1 WHERE nro_transferencia = $2;"
+    async with pool.acquire() as conn:
+        await conn.execute(query, id_sala, nro_transferencia)

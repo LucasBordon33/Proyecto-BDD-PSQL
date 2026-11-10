@@ -28,9 +28,17 @@
             <input class="entrada" id="fecha-transferencia" type="text" disabled style="background: #f3f4f6;">
           </div>
 
-          <div style="display: grid; gap: 0.5rem; margin-bottom: 1.5rem;">
-            <label for="sala-destino" style="font-weight: bold; color: var(--placeholder);">Sala solicitante</label>
-            <input class="entrada" id="sala-destino" type="text" disabled style="background: #f3f4f6;">
+          <div style="margin-bottom: 1.5rem;">
+            <label for="sala-destino" style="font-weight: bold; color: var(--placeholder); display: block; margin-bottom: 0.5rem;">Sala solicitante</label>
+            
+            <!-- Vista Solo Lectura (Para Terminado/Procesado) -->
+            <input class="entrada" id="sala-destino-readonly" type="text" disabled style="background: #f3f4f6; width: 100%;">
+            
+            <!-- Buscador (Solo para En Confección) -->
+            <div id="contenedor-editar-sala" style="display: none; position: relative;">
+              <input class="buscar" id="sala-destino" type="search" placeholder="Buscar otra sala para cambiar..." autocomplete="off" style="width: 100%;">
+              <ul class="items" id="lista-salas" style="display: none; position: absolute; width: 100%; top: 100%; background: #fff; z-index: 10; border: 2px solid var(--tinta); max-height: 150px; overflow-y: auto; margin-top: 4px; padding: 0;"></ul>
+            </div>
           </div>
 
           <div style="display: grid; gap: 0.5rem;">
