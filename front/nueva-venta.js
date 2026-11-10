@@ -42,10 +42,10 @@ function calcularTotal() {
 async function registrarVenta(evento) {
     evento.preventDefault(); 
 
-    // Capturamos los IDs ocultos que guardamos al hacer clic en las listas
     const inputCliente = document.getElementById('cliente');
     const inputSala = document.getElementById('sala');
-    const cantidad = parseInt(document.getElementById('input-cantidad').value);
+    const inputCantidad = document.getElementById('input-cantidad');
+    const cantidad = parseInt(inputCantidad.value);
     
     const idClienteSeleccionado = inputCliente.dataset.id;
     const idSalaSeleccionada = inputSala.dataset.id;
@@ -60,26 +60,39 @@ async function registrarVenta(evento) {
         return;
     }
 
-    // Estructura de datos para tu backend (usando IDs numéricos)
+    // Calculamos los totales para mandarlos al backend
+    const subtotal = cantidad * precioUnitario;
+    const descuento = 0; // Lo dejamos en 0 por ahora
+    const total = subtotal - descuento;
+
+    // Estructura de datos adaptada a tu tabla comprobante
     const datosVenta = {
-        codigo_vino: codigoVino,
         id_cliente: parseInt(idClienteSeleccionado), 
         id_sala: parseInt(idSalaSeleccionada),       
-        cantidad: cantidad
+        subtotal: subtotal,
+        descuento: descuento,
+        total: total,
+        renglones: [
+            {
+                codigo_vino: codigoVino,
+                cantidad: cantidad,
+                precio_unitario: precioUnitario
+            }
+        ]
     };
 
     try {
-        const respuesta = await fetch(`http://localhost:8000/v1/api/ventas`, {
+        const respuesta = await fetch(`http://localhost:8000/v1/api/comprobantes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosVenta)
         });
 
         if (respuesta.ok) {
-            window.location.href = 'index.html';
+            window.location.href = 'index.html'; // Volvemos al catálogo si fue un éxito
         } else {
             const errorData = await respuesta.json();
-            mostrarError(errorData.detail || "Error al procesar la venta.");
+            mostrarError(errorData.detail || "Error al procesar el comprobante.");
         }
     } catch (error) {
         mostrarError("Error de conexión con el servidor.");
@@ -95,9 +108,7 @@ function mostrarError(mensaje) {
     }
 }
 
-// ==========================================
 // 5. INICIALIZACIÓN Y EVENTOS DE LA PÁGINA
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     
     // Escondemos la caja de error al inicio
