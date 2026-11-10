@@ -32,3 +32,6 @@ async def procesar_transferencia(pool: asyncpg.Pool, nro_transferencia: int) -> 
     # o "La transferencia debe estar terminada para procesarse" devolviendo un 409 Conflict.
     await transferencias_repo.call_procesar_transferencia(pool, nro_transferencia)
     return {"mensaje": f"Transferencia N° {nro_transferencia} procesada exitosamente. Stock movido a la sala."}
+
+async def listar_transferencias(pool: asyncpg.Pool, limit: int = 100, offset: int = 0) -> list:
+    return await transferencias_repo.get_todas_transferencias(pool, limit, offset)

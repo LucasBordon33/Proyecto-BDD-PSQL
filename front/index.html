@@ -28,11 +28,25 @@
           <circle cx="8" cy="19" r="2.4" fill="currentColor"/>
         </svg>
       </button>
-      <a href="agregar.html" class="btn-agregar-redondo" aria-label="Agregar nuevo vino" title="Agregar nuevo vino">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
-    </svg>
-      </a>
+      <!-- Reemplazamos el <a> por el contenedor del menú -->
+      <div class="contenedor-mas" style="position: relative;">
+        <!-- El botón + -->
+        <button type="button" id="btn-opciones-mas" class="filtro btn-mas" aria-label="Opciones de creación">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+        
+        <!-- El menú desplegable oculto -->
+        <ul id="menu-mas" class="menu-mas">
+          <li>
+            <a href="agregar.html">Nuevo Vino</a>
+          </li>
+          <li>
+            <a href="transferencias.html">Transferencias</a>
+          </li>
+        </ul>
+      </div>
     </div>
 
 <!-- Panel de Filtros -->

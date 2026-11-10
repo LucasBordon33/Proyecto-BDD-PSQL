@@ -51,3 +51,19 @@ async def call_procesar_transferencia(pool: asyncpg.Pool, nro_transferencia: int
     query = "CALL procesar_transferencia($1);"
     async with pool.acquire() as conn:
         await conn.execute(query, nro_transferencia)
+
+async def get_todas_transferencias(pool: asyncpg.Pool, limit: int, offset: int) -> list:
+    # Hacemos un cast de estado::text para que FastAPI/Pydantic lo parsee a JSON sin problemas
+    query = """
+        SELECT 
+            nro_transferencia, 
+            id_sala, 
+            fecha_confeccion, 
+            estado::text 
+        FROM transferencia
+        ORDER BY nro_transferencia DESC
+        LIMIT $1 OFFSET $2;
+    """
+    async with pool.acquire() as conn:
+        records = await conn.fetch(query, limit, offset)
+        return [dict(record) for record in records]

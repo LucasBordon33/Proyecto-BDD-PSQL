@@ -37,3 +37,8 @@ async def procesar_transferencia(request: Request, nro: int):
     """
     pool = request.app.state.pool
     return await transferencias_service.procesar_transferencia(pool, nro)
+
+@router.get("")
+async def obtener_transferencias(request: Request, limit: int = 100, offset: int = 0):
+    pool = request.app.state.pool
+    return await transferencias_service.listar_transferencias(pool, limit, offset)
