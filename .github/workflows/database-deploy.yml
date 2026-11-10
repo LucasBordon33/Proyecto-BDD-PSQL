@@ -65,10 +65,10 @@ jobs:
             sleep 2
           done
 
-          echo "ERROR: PostgreSQL no inició correctamente"
+          echo "ERROR: PostgreSQL no inició"
           exit 1
 
-      - name: Verificar conexión PostgreSQL
+      - name: Verificar conexión
         env:
           PGPASSWORD: postgres
         run: |
@@ -78,40 +78,20 @@ jobs:
             -d bodega \
             -c "SELECT version();"
 
-      - name: Instalar Flyway
+      - name: Mostrar migraciones
         run: |
-          set -euxo pipefail
-
-          FLYWAY_VERSION=10.22.0
-
-          curl -fsSL \
-            "https://github.com/flyway/flyway/releases/download/v${FLYWAY_VERSION}/flyway-${FLYWAY_VERSION}-linux-x64.tar.gz" \
-            -o flyway.tar.gz
-
-          sudo tar -xzf flyway.tar.gz -C /opt
-
-          sudo ln -sf \
-            /opt/flyway-${FLYWAY_VERSION}/flyway \
-            /usr/local/bin/flyway
-
-          flyway --version
-
-      - name: Verificar estructura del repositorio
-        run: |
-          pwd
-          ls -la
-          echo ""
-          echo "Migraciones encontradas:"
+          echo "===== MIGRACIONES ====="
           ls -lah db/migrations
-
-      - name: Mostrar archivos SQL
-        run: |
+          echo ""
           find db/migrations -type f
 
-      - name: Flyway Info inicial
+      - name: Flyway Info
         run: |
-          flyway -X \
-            -locations=filesystem:db/migrations \
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
+            -X \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
             -sqlMigrationSuffixes=.sql \
@@ -122,8 +102,11 @@ jobs:
 
       - name: Flyway Validate
         run: |
-          flyway -X \
-            -locations=filesystem:db/migrations \
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
+            -X \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
             -sqlMigrationSuffixes=.sql \
@@ -134,8 +117,10 @@ jobs:
 
       - name: Flyway Repair
         run: |
-          flyway \
-            -locations=filesystem:db/migrations \
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
             -sqlMigrationSuffixes=.sql \
@@ -146,8 +131,11 @@ jobs:
 
       - name: Flyway Migrate
         run: |
-          flyway -X \
-            -locations=filesystem:db/migrations \
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
+            -X \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
             -sqlMigrationSuffixes=.sql \
@@ -156,10 +144,12 @@ jobs:
             -password=postgres \
             migrate
 
-      - name: Flyway Info final
+      - name: Flyway Info Final
         run: |
-          flyway \
-            -locations=filesystem:db/migrations \
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
             -sqlMigrationSuffixes=.sql \
@@ -167,16 +157,6 @@ jobs:
             -user=postgres \
             -password=postgres \
             info
-
-      - name: Verificar tablas creadas
-        env:
-          PGPASSWORD: postgres
-        run: |
-          psql \
-            -h localhost \
-            -U postgres \
-            -d bodega \
-            -c "\dt"
 
       - name: Mostrar historial Flyway
         env:
@@ -202,8 +182,7 @@ jobs:
   desplegar:
     name: Desplegar migraciones a Neon
 
-    if: github.event_name == 'push' &&
-        github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     needs: pruebas
 
@@ -218,24 +197,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client
 
-      - name: Instalar Flyway
-        run: |
-          set -euxo pipefail
-
-          FLYWAY_VERSION=10.22.0
-
-          curl -fsSL \
-            "https://github.com/flyway/flyway/releases/download/v${FLYWAY_VERSION}/flyway-${FLYWAY_VERSION}-linux-x64.tar.gz" \
-            -o flyway.tar.gz
-
-          sudo tar -xzf flyway.tar.gz -C /opt
-
-          sudo ln -sf \
-            /opt/flyway-${FLYWAY_VERSION}/flyway \
-            /usr/local/bin/flyway
-
-          flyway --version
-
       - name: Esperar Neon
         run: |
           for i in $(seq 1 30); do
@@ -245,20 +206,19 @@ jobs:
               -U app_migrator \
               -d "${{ secrets.NEON_DB }}"
             then
-              echo "Neon listo"
               exit 0
             fi
 
             sleep 2
           done
 
-          echo "No fue posible conectar con Neon"
           exit 1
 
       - name: Flyway Validate
         run: |
-          flyway \
-            -locations=filesystem:db/migrations \
+          docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
             -sqlMigrationSuffixes=.sql \
@@ -269,8 +229,9 @@ jobs:
 
       - name: Flyway Migrate
         run: |
-          flyway \
-            -locations=filesystem:db/migrations \
+          docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
             -sqlMigrationSuffixes=.sql \
