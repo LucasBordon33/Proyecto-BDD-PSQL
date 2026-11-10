@@ -4,9 +4,9 @@ let precioUnitario = 0;
 
 // 1. Cargar los datos del vino seleccionado
 async function cargarDatosVenta() {
-    if (!codigoVino) {
-        mostrarError("No se especificó un vino para la venta.");
-        return;
+    // Bloqueamos explícitamente si llega la palabra "undefined" o "null" en la URL
+    if (!codigoVino || codigoVino === 'undefined' || codigoVino === 'null') {
+        return; // No hacemos nada, permitimos cargar la venta vacía limpiamente
     }
 
     try {
@@ -16,7 +16,6 @@ async function cargarDatosVenta() {
             document.getElementById('venta-nombre').textContent = vino.nombre;
             precioUnitario = parseFloat(vino.precio) || 0;
             document.getElementById('venta-precio').textContent = `$${precioUnitario.toFixed(2)}`;
-            
             calcularTotal();
         }
     } catch (error) {
@@ -60,25 +59,46 @@ async function registrarVenta(evento) {
         return;
     }
 
-    // Calculamos los totales para mandarlos al backend
-    const subtotal = cantidad * precioUnitario;
-    const descuento = 0; // Lo dejamos en 0 por ahora
-    const total = subtotal - descuento;
+    // Estructura de datos para los vinos
+    const renglonesBase = [];
+    
+    // 1. Guardar el vino original (el de arriba)
+    if (codigoVino && !isNaN(cantidad) && cantidad > 0) {
+        renglonesBase.push({
+            codigo_vino: codigoVino,
+            cantidad: cantidad,
+            precio_unitario: precioUnitario
+        });
+    }
 
-    // Estructura de datos adaptada a tu tabla comprobante
+    // 2. Guardar todos los vinos extra que el usuario agregó
+    document.querySelectorAll('.vino-extra').forEach(renglon => {
+        const cod = renglon.querySelector('.input-vino-search').dataset.codigo;
+        const prec = parseFloat(renglon.querySelector('.input-vino-search').dataset.precio);
+        const cant = parseInt(renglon.querySelector('.input-cant-extra').value);
+
+        if (cod && !isNaN(cant) && cant > 0) {
+            renglonesBase.push({ codigo_vino: cod, cantidad: cant, precio_unitario: prec });
+        }
+    });
+
+    if (renglonesBase.length === 0) {
+        mostrarError("Debes seleccionar al menos un vino válido.");
+        return;
+    }
+
+    // Recalcular para asegurar total exacto en BD
+    const subtotalFinal = renglonesBase.reduce((acc, r) => acc + (r.cantidad * r.precio_unitario), 0);
+    const descuento = 0; 
+
+    // Estructura de datos final adaptada a tu tabla comprobante
     const datosVenta = {
         id_cliente: parseInt(idClienteSeleccionado), 
         id_sala: parseInt(idSalaSeleccionada),       
-        subtotal: subtotal,
+        subtotal: subtotalFinal,
         descuento: descuento,
-        total: total,
-        renglones: [
-            {
-                codigo_vino: codigoVino,
-                cantidad: cantidad,
-                precio_unitario: precioUnitario
-            }
-        ]
+        total: subtotalFinal - descuento,
+        renglones: renglonesBase
     };
 
     try {
@@ -89,7 +109,7 @@ async function registrarVenta(evento) {
         });
 
         if (respuesta.ok) {
-            window.location.href = 'index.html'; // Volvemos al catálogo si fue un éxito
+            window.location.href = 'index.html';
         } else {
             const errorData = await respuesta.json();
             mostrarError(errorData.detail || "Error al procesar el comprobante.");
@@ -194,10 +214,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputSala = document.getElementById('sala');
     const listaSalas = document.getElementById('lista-salas');
     const labelSalaSeleccionada = document.getElementById('sala-seleccionada');
-    let todasLasSalas = []; // Guardamos las salas en memoria para buscar ultra rápido
+    let todasLasSalas = [];
 
     if (inputSala && listaSalas) {
-        // Función auxiliar para dibujar la lista en pantalla
         const renderizarSalas = (salasAMostrar) => {
             listaSalas.innerHTML = '';
             if (salasAMostrar && salasAMostrar.length > 0) {
@@ -220,46 +239,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 listaSalas.style.display = 'grid';
             } else {
-                listaSalas.style.display = 'none'; // Si no hay coincidencias, ocultamos
+                listaSalas.style.display = 'none';
             }
         };
 
-        // Al hacer clic en la casilla: bajamos las salas (si no lo hicimos ya) y las mostramos
         inputSala.addEventListener('click', async () => {
             if (todasLasSalas.length === 0) {
-                try {
-                    todasLasSalas = await fetchAPI('/v1/api/salas');
-                } catch (error) {
-                    console.error("Error cargando salas:", error);
-                }
+                try { todasLasSalas = await fetchAPI('/v1/api/salas'); } 
+                catch (error) { console.error("Error cargando salas:", error); }
             }
-            
             const texto = inputSala.value.trim().toLowerCase();
             const filtradas = todasLasSalas.filter(s => s.nombre.toLowerCase().includes(texto));
             renderizarSalas(filtradas);
         });
 
-        // Al teclear: limpiamos la selección y filtramos la lista en vivo
         inputSala.addEventListener('input', async () => {
             inputSala.dataset.id = "";
             if (labelSalaSeleccionada) labelSalaSeleccionada.style.display = 'none';
 
-            // Por si el usuario empezó a teclear muy rápido sin haber hecho clic
             if (todasLasSalas.length === 0) {
-                try {
-                    todasLasSalas = await fetchAPI('/v1/api/salas');
-                } catch (error) {
-                    console.error("Error cargando salas:", error);
-                }
+                try { todasLasSalas = await fetchAPI('/v1/api/salas'); } 
+                catch (error) { console.error("Error cargando salas:", error); }
             }
-
             const texto = inputSala.value.trim().toLowerCase();
             const filtradas = todasLasSalas.filter(s => s.nombre.toLowerCase().includes(texto));
             renderizarSalas(filtradas);
         });
     }
 
-    // Ocultar menús si se hace clic fuera de ellos
+    // Ocultar menús si se hace clic fuera
     document.addEventListener('click', (e) => {
         if (inputCliente && !inputCliente.contains(e.target) && !listaClientes.contains(e.target)) {
             listaClientes.style.display = 'none';
@@ -269,4 +277,123 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- LÓGICA PARA AGREGAR NUEVOS RENGLONES DE VINO ---
+    const btnAgregarRenglon = document.getElementById('btn-agregar-renglon');
+    const contenedorVinos = document.getElementById('contenedor-vinos');
+    let contadorVinosExtra = 0;
+    let todosLosVinos = []; // Guardamos el catálogo en memoria
+
+    function recalcularGranTotal() {
+        let granTotal = 0;
+        const inputCantPrin = document.getElementById('input-cantidad');
+        if (inputCantPrin && codigoVino) {
+            granTotal += (parseInt(inputCantPrin.value) || 0) * precioUnitario;
+        }
+        document.querySelectorAll('.vino-extra').forEach(renglon => {
+            const precio = parseFloat(renglon.querySelector('.input-vino-search').dataset.precio) || 0;
+            const cant = parseInt(renglon.querySelector('.input-cant-extra').value) || 0;
+            granTotal += precio * cant;
+        });
+        const totalEtiqueta = document.querySelector('.total');
+        if (totalEtiqueta) totalEtiqueta.textContent = `Total: $${granTotal.toFixed(2)}`;
+    }
+
+    const inputCantPrincipal = document.getElementById('input-cantidad');
+    if(inputCantPrincipal) inputCantPrincipal.addEventListener('input', recalcularGranTotal);
+
+    if (btnAgregarRenglon && contenedorVinos) {
+        btnAgregarRenglon.addEventListener('click', () => {
+            contadorVinosExtra++;
+            
+            const nuevoDiv = document.createElement('div');
+            nuevoDiv.className = 'grupo vino-extra';
+            nuevoDiv.style.marginTop = '20px';
+            nuevoDiv.style.paddingTop = '15px';
+            nuevoDiv.style.borderTop = '1px dashed #ccc';
+            nuevoDiv.style.position = 'relative';
+            nuevoDiv.style.zIndex = 100 - contadorVinosExtra;
+
+            nuevoDiv.innerHTML = `
+                <div class="busqueda" style="margin-bottom: 10px; position: relative;">
+                    <label class="solo-lectores" for="vino-extra-${contadorVinosExtra}">Buscar otro vino</label>
+                    <input class="buscar input-vino-search" id="vino-extra-${contadorVinosExtra}" type="search" placeholder="Buscar vino por código o nombre..." autocomplete="off">
+                    <ul class="items lista-vinos-extra" style="display: none; position: absolute; width: 100%; top: 100%; margin-top: 5px; background: #ffffff; border: 1px solid #ccc; border-radius: 4px; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></ul>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="precio-vino-extra" style="font-weight: 600; color: var(--vino);">$0.00</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label for="cant-extra-${contadorVinosExtra}">Cantidad: </label>
+                        <input class="input-cant-extra" type="number" id="cant-extra-${contadorVinosExtra}" value="1" min="1" style="width: 60px; padding: 4px; border-radius: 4px; border: 1px solid #ccc;">
+                        <button type="button" class="btn-borrar-renglon" title="Eliminar" style="background: #ef4444; color: white; border: none; border-radius: 4px; width: 30px; height: 30px; cursor: pointer; font-weight: bold;">X</button>
+                    </div>
+                </div>
+            `;
+            contenedorVinos.appendChild(nuevoDiv);
+
+            const inputBusqueda = nuevoDiv.querySelector('.input-vino-search');
+            const listaResultados = nuevoDiv.querySelector('.lista-vinos-extra');
+            const spanPrecio = nuevoDiv.querySelector('.precio-vino-extra');
+            let timeoutBusquedaVino;
+
+            nuevoDiv.querySelector('.btn-borrar-renglon').addEventListener('click', () => {
+                nuevoDiv.remove();
+                recalcularGranTotal();
+            });
+
+            nuevoDiv.querySelector('.input-cant-extra').addEventListener('input', recalcularGranTotal);
+
+            inputBusqueda.addEventListener('input', async () => {
+                clearTimeout(timeoutBusquedaVino);
+                inputBusqueda.dataset.codigo = "";
+                inputBusqueda.dataset.precio = "0";
+                spanPrecio.textContent = "$0.00";
+                recalcularGranTotal();
+
+                const texto = inputBusqueda.value.trim().toLowerCase();
+                if (texto.length < 2) {
+                    listaResultados.style.display = 'none'; 
+                    return;
+                }
+
+                timeoutBusquedaVino = setTimeout(async () => {
+                    try {
+                        // Traemos el catálogo completo una sola vez
+                        if (todosLosVinos.length === 0) {
+                            const res = await fetchAPI(`/v1/api/vinos?limit=100&offset=0`);
+                            if (res) todosLosVinos = res;
+                        }
+
+                        // Filtramos ultra rápido en JavaScript por nombre o por código
+                        const resultados = todosLosVinos.filter(v => 
+                            v.nombre.toLowerCase().includes(texto) || 
+                            (v.codigo_vino && v.codigo_vino.toLowerCase().includes(texto))
+                        ).slice(0, 10);
+
+                        listaResultados.innerHTML = '';
+                        if (resultados && resultados.length > 0) {
+                            resultados.forEach(v => {
+                                const li = document.createElement('li');
+                                li.className = 'item';
+                                li.innerHTML = `<button class="item__opcion" type="button" style="text-align: left;">${v.nombre} - $${v.precio}</button>`;
+                                li.querySelector('button').addEventListener('click', () => {
+                                    inputBusqueda.value = v.nombre;
+                                    inputBusqueda.dataset.codigo = v.codigo_vino; 
+                                    inputBusqueda.dataset.precio = v.precio;
+                                    spanPrecio.textContent = `$${parseFloat(v.precio).toFixed(2)}`;
+                                    listaResultados.style.display = 'none';
+                                    recalcularGranTotal();
+                                });
+                                listaResultados.appendChild(li);
+                            });
+                            listaResultados.style.display = 'grid';
+                        } else {
+                            listaResultados.style.display = 'none';
+                        }
+                    } catch (error) { 
+                        console.error(error); 
+                    }
+                }, 200);
+            });
+        });
+    }
 });

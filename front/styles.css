@@ -753,20 +753,26 @@ body {
   font-size: 1.3rem;
 }
 
-.agregar {
-  display: grid;
-  place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  margin-top: 1.5rem;
-  padding: 0;
-  border: 0;
-  background: #c8d0db;
-  color: var(--tinta);
-  font: inherit;
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
+.btn-agregar-cuadrado {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: #cbd5e1; /* Tu color gris */
+    color: white; /* El símbolo + en blanco */
+    font-size: 24px;
+    font-weight: bold;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    transition: background-color 0.2s;
+}
+
+.btn-agregar-cuadrado:hover {
+    background-color: #94a3b8; /* Un gris un poco más oscuro al pasar el mouse */
 }
 
 .total {
