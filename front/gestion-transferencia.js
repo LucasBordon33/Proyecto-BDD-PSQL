@@ -234,31 +234,31 @@ function configurarBuscadorVino() {
         if (texto.length < 2) { listaVinos.style.display = 'none'; return; }
 
         timeoutBusqueda = setTimeout(async () => {
-            if (todosLosVinos.length === 0) {
-                try { todosLosVinos = await fetchAPI('/v1/api/vinos?limit=100&offset=0'); } 
-                catch (error) { return; }
-            }
-            const resultados = todosLosVinos.filter(v => 
-                v.nombre.toLowerCase().includes(texto) || (v.codigo_vino && v.codigo_vino.toLowerCase().includes(texto))
-            ).slice(0, 10);
+            try {
+                // Llamamos directamente al backend pasándole lo que el usuario escribió
+                const resultados = await fetchAPI(`/v1/api/vinos?nombre=${encodeURIComponent(texto)}&limit=10&offset=0`);
 
-            listaVinos.innerHTML = '';
-            if (resultados.length > 0) {
-                resultados.forEach(v => {
-                    const li = document.createElement('li');
-                    li.className = 'item';
-                    li.innerHTML = `<button class="item__opcion" type="button" style="text-align:left;">${v.nombre}</button>`;
-                    li.querySelector('button').addEventListener('click', () => {
-                        inputBuscar.value = v.nombre;
-                        inputBuscar.dataset.codigo = v.codigo_vino;
-                        listaVinos.style.display = 'none';
-                        inputCantidad.focus();
+                listaVinos.innerHTML = '';
+                if (resultados && resultados.length > 0) {
+                    resultados.forEach(v => {
+                        const li = document.createElement('li');
+                        li.className = 'item';
+                        li.innerHTML = `<button class="item__opcion" type="button" style="text-align:left;">${v.nombre}</button>`;
+                        
+                        li.querySelector('button').addEventListener('click', () => {
+                            inputBuscar.value = v.nombre;
+                            inputBuscar.dataset.codigo = v.codigo_vino;
+                            listaVinos.style.display = 'none';
+                            inputCantidad.focus();
+                        });
+                        listaVinos.appendChild(li);
                     });
-                    listaVinos.appendChild(li);
-                });
-                listaVinos.style.display = 'block';
-            } else {
-                listaVinos.style.display = 'none';
+                    listaVinos.style.display = 'block';
+                } else {
+                    listaVinos.style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error en la búsqueda:", error);
             }
         }, 200);
     });
