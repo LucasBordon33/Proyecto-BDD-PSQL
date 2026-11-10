@@ -29,34 +29,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Instalar Flyway CLI
+        run: |
+          curl -sfL https://github.com/flyway/flyway/releases/download/v10.22.0/flyway-10.22.0-linux-x86_64.tar.gz | tar -xz -C /tmp
+          sudo mv /tmp/flyway-10.22.0/flyway /usr/local/bin/flyway
+          flyway --version
+
       - name: Liberar bloqueos previos de PostgreSQL
-        run: >
-          docker run --rm --network host
-          postgres:16-alpine
-          psql "postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable"
-          -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='bodega' AND pid<>pg_backend_pid();"
+        run: |
+          docker run --rm --network host postgres:16-alpine psql "postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable" \
+            -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='bodega' AND pid<>pg_backend_pid();" || true
 
       - name: Ejecutar migraciones (Flyway)
-        run: >
-          docker run --rm --network host
-          -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
-          -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
-          flyway/flyway:10-alpine
-          -url=jdbc:postgresql://localhost:5432/bodega
-          -user=postgres
-          -password=postgres
-          migrate
+        run: |
+          flyway \
+            -locations=filesystem:db/migrations \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
+            -url=jdbc:postgresql://localhost:5432/bodega \
+            -user=postgres \
+            -password=postgres \
+            migrate
 
       - name: Validar migraciones (Flyway validate)
-        run: >
-          docker run --rm --network host
-          -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
-          -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
-          flyway/flyway:10-alpine
-          -url=jdbc:postgresql://localhost:5432/bodega
-          -user=postgres
-          -password=postgres
-          validate
+        run: |
+          flyway \
+            -locations=filesystem:db/migrations \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
+            -url=jdbc:postgresql://localhost:5432/bodega \
+            -user=postgres \
+            -password=postgres \
+            validate
 
       - name: Instalar uv
         uses: astral-sh/setup-uv@v5
@@ -77,27 +81,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Instalar Flyway CLI
+        run: |
+          curl -sfL https://github.com/flyway/flyway/releases/download/v10.22.0/flyway-10.22.0-linux-x86_64.tar.gz | tar -xz -C /tmp
+          sudo mv /tmp/flyway-10.22.0/flyway /usr/local/bin/flyway
+          flyway --version
+
       - name: Migrar base de datos productiva (endpoint directo, sin pooler)
-        run: >
-          docker run --rm
-          -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
-          -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
-          flyway/flyway:10-alpine
-          -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require"
-          -user=app_migrator
-          -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}"
-          migrate
+        run: |
+          flyway \
+            -locations=filesystem:db/migrations \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
+            -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require" \
+            -user=app_migrator \
+            -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}" \
+            migrate
 
       - name: Verificar éxito del despliegue (Flyway validate)
-        run: >
-          docker run --rm
-          -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
-          -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
-          flyway/flyway:10-alpine
-          -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require"
-          -user=app_migrator
-          -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}"
-          validate
+        run: |
+          flyway \
+            -locations=filesystem:db/migrations \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
+            -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require" \
+            -user=app_migrator \
+            -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}" \
+            validate
 
       - name: Verificar éxito del despliegue (smoke test)
         run: >
