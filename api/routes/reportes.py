@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Query
 from api.services import reportes_service
 
-router = APIRouter(prefix="/reportes", tags=["Reportes"])
+router = APIRouter(prefix="/v1/api/reportes", tags=["Reportes"])
 
 @router.get("/top-vinos", summary="Top 10 vinos más vendidos (S1)")
 async def endpoint_top_vinos(request: Request):

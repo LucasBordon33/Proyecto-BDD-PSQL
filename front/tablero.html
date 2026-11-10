@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tablero de Estadísticas</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Librería para los gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <main class="pagina pagina--ancha">
+    
+    <a href="index.html" class="volver" style="margin-bottom: 1.5rem;">
+      <svg class="volver__icono" viewBox="0 0 24 24" aria-hidden="true" style="width: 2.2rem; height: 2.2rem;">
+        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor"/>
+      </svg>
+      Volver al catálogo
+    </a>
+
+    <h1 class="titulo" style="text-align: center;">Estadísticas</h1>
+
+    <!-- SECCIÓN 1: Ranking 10 Vinos -->
+    <section style="margin-bottom: 4rem;">
+      <h2 style="text-align: center; margin-bottom: 2rem;">Ranking de los 10 vinos más vendidos</h2>
+      
+      <!-- Contenedor con scroll horizontal -->
+      <div id="contenedor-ranking" style="display: flex; gap: 2rem; overflow-x: auto; padding-bottom: 1rem; scroll-behavior: smooth;">
+        <p style="text-align: center; width: 100%;">Cargando ranking...</p>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: Gráficos de Ventas -->
+    <section style="margin-bottom: 4rem;">
+      <h2 style="text-align: center; margin-bottom: 2rem;">Ventas por sala en el último trimestre</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: center;">
+        
+        <!-- Gráfico de Barras -->
+        <div style="background: var(--papel); padding: 1rem; border: 2px solid var(--tinta); border-radius: 12px;">
+            <canvas id="graficoBarras"></canvas>
+        </div>
+        
+        <!-- Gráfico de Torta -->
+        <div style="background: var(--papel); padding: 1rem; border: 2px solid var(--tinta); border-radius: 12px; display: flex; justify-content: center;">
+            <canvas id="graficoTorta" style="max-height: 300px;"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: Stock Crítico -->
+    <section style="margin-bottom: 4rem; background: var(--papel); padding: 2rem; border: 2px solid var(--tinta); border-radius: 12px;">
+      <h2 style="margin-top: 0;">Consultar stock crítico de salas</h2>
+      
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
+        <label for="select-sala-stock" style="font-weight: bold;">Sala de venta:</label>
+        <select id="select-sala-stock" class="entrada" style="width: auto; max-width: 300px;">
+          <option value="" disabled selected>Seleccione una sala...</option>
+        </select>
+      </div>
+
+      <table style="width: 100%; text-align: left; border-collapse: collapse; margin-bottom: 2rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--tinta);">
+            <th style="padding: 0.5rem;">Vino</th>
+            <th style="padding: 0.5rem; width: 100px;">Stock</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-stock-critico">
+          <tr>
+            <td colspan="2" style="padding: 1rem; text-align: center; color: var(--placeholder);">Seleccione una sala para ver su stock crítico</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: center; margin-top: 2rem;">
+        <a href="nueva-transferencia.html" class="boton" style="width: max-content; padding: 1rem 3rem; height: auto; line-height: normal;">Ir a transferencias</a>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="api.js"></script>
+  <script src="tablero.js"></script>
+</body>
+</html>

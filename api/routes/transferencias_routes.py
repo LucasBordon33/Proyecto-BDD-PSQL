@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Request, status
 from api.models.schemas import TransferenciaCreate, TransferenciaRenglonCreate
 from api.services import transferencias_service
+from api.repositories import transferencias_repo
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/v1/api/transferencias", tags=["Transferencias"])
 
@@ -37,3 +39,41 @@ async def procesar_transferencia(request: Request, nro: int):
     """
     pool = request.app.state.pool
     return await transferencias_service.procesar_transferencia(pool, nro)
+
+@router.get("")
+async def obtener_transferencias(request: Request, limit: int = 100, offset: int = 0):
+    pool = request.app.state.pool
+    return await transferencias_service.listar_transferencias(pool, limit, offset)
+
+
+@router.get("/{nro}")
+async def obtener_transferencia_detalle(request: Request, nro: int):
+    """
+    Devuelve los detalles de una transferencia específica, incluyendo sus renglones.
+    """
+    pool = request.app.state.pool
+    return await transferencias_service.obtener_transferencia(pool, nro)
+
+class CantidadUpdate(BaseModel):
+    cantidad: int
+
+class SalaUpdate(BaseModel):
+    id_sala: int
+
+@router.delete("/{nro}/renglones/{codigo_vino}")
+async def eliminar_renglon(request: Request, nro: int, codigo_vino: str):
+    pool = request.app.state.pool
+    await transferencias_repo.delete_renglon(pool, nro, codigo_vino)
+    return {"mensaje": "Renglón eliminado"}
+
+@router.put("/{nro}/renglones/{codigo_vino}")
+async def modificar_cantidad(request: Request, nro: int, codigo_vino: str, payload: CantidadUpdate):
+    pool = request.app.state.pool
+    await transferencias_repo.update_cantidad_renglon(pool, nro, codigo_vino, payload.cantidad)
+    return {"mensaje": "Cantidad actualizada"}
+
+@router.put("/{nro}")
+async def modificar_sala(request: Request, nro: int, payload: SalaUpdate):
+    pool = request.app.state.pool
+    await transferencias_repo.update_sala_transferencia(pool, nro, payload.id_sala)
+    return {"mensaje": "Sala actualizada"}

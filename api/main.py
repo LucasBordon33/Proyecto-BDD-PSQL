@@ -11,6 +11,7 @@ from api.routes.transferencias_routes import router as transferencias_router
 from api.routes.ingresos_routes import router as ingresos_router
 from api.routes.reportes import router as reportes_router
 from api.routes.salas_routes import router as salas_router
+from api.routes.reportes import router as reportes
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -62,3 +63,4 @@ app.include_router(transferencias_router)
 app.include_router(ingresos_router)
 app.include_router(reportes_router)
 app.include_router(salas_router)
+app.include_router(reportes)

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transferencias</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="pagina pagina--ancha pagina--tabla">
+    
+    <!-- Botón de volver arriba a la izquierda -->
+    <a href="index.html" class="volver" style="margin-bottom: 1.5rem;">
+      <svg class="volver__icono" viewBox="0 0 24 24" aria-hidden="true" style="width: 2.2rem; height: 2.2rem;">
+        <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="currentColor"/>
+      </svg>
+      Volver al catálogo
+    </a>
+
+    <h1 class="titulo">Transferencias</h1>
+
+    <!-- Botón con margen inferior agregado -->
+    <a class="boton boton--ancha" href="nueva-transferencia.html" style="margin-bottom: 2rem;">Nueva transferencia</a>
+
+    <!-- Consultor de transferencias -->
+    <div class="herramientas" style="margin-bottom: 2rem;">
+      <div class="buscador">
+        <label class="solo-lectores" for="buscar-transferencia">Buscar transferencia</label>
+        <svg class="buscador__icono" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="3.5"></circle>
+          <path d="M15 15l6 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"></path>
+        </svg>
+        <input id="buscar-transferencia" type="search" placeholder="Buscar por número o sala...">
+      </div>
+      
+      <!-- Filtro por estado -->
+      <select id="filtro-estado" class="entrada" style="flex: none; width: auto; height: 3.5rem; border-radius: 999px; cursor: pointer;">
+        <option value="">Todos los estados</option>
+        <option value="en_confeccion">En confección</option>
+        <option value="terminado">Terminado</option>
+        <option value="procesado">Procesado</option>
+      </select>
+    </div>
+
+    <!-- Contenedor donde JS inyectará las tarjetas de transferencia -->
+    <ul id="lista-transferencias" style="list-style: none; padding: 0; margin: 0; display: grid; gap: 1.5rem;">
+      <!-- Se llena con JavaScript -->
+    </ul>
+  </main>
+
+  <script src="api.js"></script>
+  <script src="transferencias.js"></script>
+</body>
+</html>

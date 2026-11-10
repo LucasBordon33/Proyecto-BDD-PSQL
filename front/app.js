@@ -121,5 +121,26 @@ if (btnLimpiar) {
     });
 }
 
+// --- LÓGICA DEL MENÚ DESPLEGABLE "+" ---
+document.addEventListener('DOMContentLoaded', () => {
+    const btnMas = document.getElementById('btn-opciones-mas');
+    const menuMas = document.getElementById('menu-mas');
+
+    if (btnMas && menuMas) {
+        // Abrir/cerrar al hacer clic en el botón
+        btnMas.addEventListener('click', (evento) => {
+            evento.stopPropagation(); // Evita que el clic se propague al document
+            menuMas.classList.toggle('activo');
+        });
+
+        // Cerrar el menú automáticamente si el usuario hace clic en cualquier otro lado
+        document.addEventListener('click', (evento) => {
+            if (!menuMas.contains(evento.target)) {
+                menuMas.classList.remove('activo');
+            }
+        });
+    }
+});
+
 // Ejecución inicial
 cargarCatalogo();
