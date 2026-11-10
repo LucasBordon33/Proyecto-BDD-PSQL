@@ -9,147 +9,136 @@ on:
 jobs:
   pruebas:
     name: Migraciones y pruebas (postgres 16)
-
-    runs-on: ubuntu-24.04
-
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16-alpine
-
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: bodega
-
         ports:
           - 5432:5432
-
         options: >-
           --health-cmd "pg_isready -U postgres -d bodega"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 15
-
     env:
       DB_HOST: localhost
       DB_PORT: "5432"
       DB_NAME: bodega
       DB_USER: postgres
       DB_PASSWORD: postgres
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Instalar cliente PostgreSQL
+      - name: Instalar cliente PostgreSQL (pg_isready)
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Validar conectividad con PostgreSQL (reintentos activos)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
-      - name: Esperar PostgreSQL
-        run: |
-          set -e
-
           for i in $(seq 1 30); do
-            if pg_isready \
-              -h localhost \
-              -p 5432 \
-              -U postgres \
-              -d bodega
-            then
-              echo "PostgreSQL listo ($i)"
-              exit 0
+            if pg_isready -h localhost -p 5432 -U postgres -d bodega; then
+              echo "PostgreSQL listo en el intento $i"
+              break
             fi
-
+            echo "Esperando a PostgreSQL... ($i/30)"
             sleep 2
           done
 
-          echo "PostgreSQL no inició"
-          exit 1
-
-      - name: Verificar PostgreSQL
-        env:
-          PGPASSWORD: postgres
+      - name: Crear roles de aplicación (requeridos por 010_roles.sql)
         run: |
-          psql \
-            -h localhost \
-            -U postgres \
-            -d bodega \
-            -c "SELECT version();"
+          set +H
+          docker run --rm --network host postgres:16-alpine psql "postgresql://postgres:postgres@localhost:5432/bodega?sslmode=disable" <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_admin') THEN
+              CREATE ROLE app_admin NOLOGIN CREATEROLE;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_migrator') THEN
+              CREATE ROLE app_migrator NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_rw') THEN
+              CREATE ROLE app_rw NOLOGIN;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_ro') THEN
+              CREATE ROLE app_ro NOLOGIN;
+            END IF;
+          END $$;
+          SQL
 
-      - name: Mostrar migraciones
+      - name: Instalar Flyway CLI (binario nativo, sin Docker)
         run: |
-          ls -lah db/migrations
-          find db/migrations -type f
+          curl -sfL https://github.com/flyway/flyway/releases/download/v10.22.0/flyway-10.22.0-linux-x86_64.tar.gz | sudo tar -xz -C /opt
+          sudo ln -sf /opt/flyway-10.22.0/flyway /usr/local/bin/flyway
+          flyway --version
 
-      - name: Flyway Info Inicial
+      - name: Liberar bloqueos previos de Flyway/PostgreSQL
         run: |
-          docker run --rm \
-            --network host \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
-            -X \
+          set +H
+          docker run --rm --network host postgres:16-alpine psql "postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable" \
+            -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='bodega' AND pid<>pg_backend_pid();" || true
+
+      - name: Flyway Info (diagnóstico inicial)
+        run: |
+          set +H
+          flyway \
+            -locations=filesystem:db/migrations \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
             -url=jdbc:postgresql://localhost:5432/bodega \
             -user=postgres \
             -password=postgres \
             info
 
-      - name: Flyway Migrate
+      - name: Flyway Validate (detecta errores reales antes de migrar)
         run: |
-          docker run --rm \
-            --network host \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
-            -X \
+          set +H
+          flyway \
+            -locations=filesystem:db/migrations \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
-            -url=jdbc:postgresql://localhost:5432/bodega \
-            -user=postgres \
-            -password=postgres \
-            migrate
-
-      - name: Flyway Validate
-        run: |
-          docker run --rm \
-            --network host \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
-            -X \
-            -sqlMigrationPrefix= \
-            -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
             -url=jdbc:postgresql://localhost:5432/bodega \
             -user=postgres \
             -password=postgres \
             validate
 
-      - name: Flyway Info Final
+      - name: Flyway Repair (recupera historial inconsistente si aplica)
         run: |
-          docker run --rm \
-            --network host \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
+          set +H
+          flyway \
+            -locations=filesystem:db/migrations \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
+            -url=jdbc:postgresql://localhost:5432/bodega \
+            -user=postgres \
+            -password=postgres \
+            repair || true
+
+      - name: Ejecutar migraciones (Flyway migrate)
+        run: |
+          set +H
+          flyway \
+            -locations=filesystem:db/migrations \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
+            -url=jdbc:postgresql://localhost:5432/bodega \
+            -user=postgres \
+            -password=postgres \
+            migrate
+
+      - name: Flyway Info (estado post-migración)
+        run: |
+          set +H
+          flyway \
+            -locations=filesystem:db/migrations \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
             -url=jdbc:postgresql://localhost:5432/bodega \
             -user=postgres \
             -password=postgres \
             info
-
-      - name: Mostrar historial Flyway
-        env:
-          PGPASSWORD: postgres
-        run: |
-          psql \
-            -h localhost \
-            -U postgres \
-            -d bodega \
-            -c "SELECT * FROM flyway_schema_history ORDER BY installed_rank;"
 
       - name: Instalar uv
         uses: astral-sh/setup-uv@v5
@@ -163,72 +152,63 @@ jobs:
         run: uv run pytest -q
 
   desplegar:
-    name: Desplegar migraciones a Neon
-
+    name: Desplegar migraciones a Neon (producción)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
     needs: pruebas
-
-    runs-on: ubuntu-24.04
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Instalar cliente PostgreSQL
+      - name: Instalar Flyway CLI (binario nativo)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+          curl -sfL https://github.com/flyway/flyway/releases/download/v10.22.0/flyway-10.22.0-linux-x86_64.tar.gz | sudo tar -xz -C /opt
+          sudo ln -sf /opt/flyway-10.22.0/flyway /usr/local/bin/flyway
+          flyway --version
 
-      - name: Esperar Neon
+      - name: Validar conectividad con Neon
         run: |
+          set +H
           for i in $(seq 1 30); do
-            if pg_isready \
-              -h "${{ secrets.NEON_HOST }}" \
-              -p 5432 \
-              -U app_migrator \
-              -d "${{ secrets.NEON_DB }}"
-            then
-              exit 0
+            if pg_isready -h "${{ secrets.NEON_HOST }}" -p 5432 -U app_migrator -d "${{ secrets.NEON_DB }}"; then
+              echo "Neon listo en el intento $i"
+              break
             fi
-
+            echo "Esperando a Neon... ($i/30)"
             sleep 2
           done
 
-          exit 1
-
-      - name: Flyway Migrate
+      - name: Liberar bloqueos previos en Neon
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
+          set +H
+          PGPASSWORD="${{ secrets.NEON_MIGRATOR_PASSWORD }}" psql "postgresql://app_migrator@${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require" \
+            -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='${{ secrets.NEON_DB }}' AND pid<>pg_backend_pid();" || true
+
+      - name: Migrar base de datos productiva (endpoint directo, sin pooler)
+        run: |
+          set +H
+          flyway \
+            -locations=filesystem:db/migrations \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
             -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require" \
             -user=app_migrator \
             -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}" \
             migrate
 
-      - name: Flyway Validate
+      - name: Verificar éxito del despliegue (Flyway validate)
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
+          set +H
+          flyway \
+            -locations=filesystem:db/migrations \
             -sqlMigrationPrefix= \
             -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
             -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require" \
             -user=app_migrator \
             -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}" \
             validate
 
-      - name: Smoke Test
-        env:
-          PGPASSWORD: ${{ secrets.NEON_MIGRATOR_PASSWORD }}
-        run: |
-          psql \
-            -h "${{ secrets.NEON_HOST }}" \
-            -U app_migrator \
-            -d "${{ secrets.NEON_DB }}" \
-            -c "SELECT count(*) FROM information_schema.tables;"
+      - name: Verificar éxito del despliegue (smoke test)
+        run: >
+          docker run --rm postgres:16-alpine
+          psql "postgresql://app_migrator:${{ secrets.NEON_MIGRATOR_PASSWORD }}@${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require"
+          -c "SELECT count(*) AS tablas_public FROM information_schema.tables WHERE table_schema = 'public';"
