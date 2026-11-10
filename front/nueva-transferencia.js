@@ -1,6 +1,6 @@
 let todasLasSalas = [];
 let todosLosVinos = [];
-let renglonesBase = []; // Aquí almacenamos { codigo_vino, cantidad, nombre }
+let renglonesBase = []; 
 
 document.addEventListener('DOMContentLoaded', () => {
     configurarBuscadorSala();
@@ -71,7 +71,6 @@ function configurarBuscadorVino() {
 
         timeoutBusqueda = setTimeout(async () => {
             try {
-                // Delegamos la búsqueda al backend para buscar en toda la base de datos
                 const resultados = await fetchAPI(`/v1/api/vinos?nombre=${encodeURIComponent(texto)}&limit=10&offset=0`);
 
                 listaVinos.innerHTML = '';
@@ -99,7 +98,7 @@ function configurarBuscadorVino() {
         }, 200);
     });
 
-    // Agregar renglón a la lista visual y al array
+
     btnAdd.addEventListener('click', () => {
         const codigo = inputBuscar.dataset.codigo;
         const nombre = inputBuscar.value;
@@ -180,7 +179,6 @@ async function registrarTransferencia(estadoObjetivo) {
             });
         }
 
-        // Éxito: volvemos al consultor
         window.location.href = 'transferencias.html';
 
     } catch (error) {
@@ -195,7 +193,7 @@ function mostrarError(mensaje) {
     errorBox.style.display = 'block';
 }
 
-// Cerrar menús al hacer clic fuera
+
 document.addEventListener('click', (e) => {
     const listaSalas = document.getElementById('lista-salas');
     const inputSala = document.getElementById('sala-destino');

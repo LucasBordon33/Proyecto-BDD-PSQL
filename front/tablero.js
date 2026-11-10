@@ -67,7 +67,6 @@ async function cargarGraficos() {
                 labels: nombresSalas,
                 datasets: [{
                     data: montosTotales,
-                    // Generar colores distintos para cada porción
                     backgroundColor: nombresSalas.map((_, i) => `hsl(${(i * 360) / nombresSalas.length}, 70%, 60%)`)
                 }]
             },
@@ -92,7 +91,6 @@ async function cargarSelectorSalas() {
         salas.forEach(s => {
             const option = document.createElement('option');
             option.value = s.id_sala;
-            // Algunas salas traen nombre, otras calle, dependiendo de cómo lo armaron
             option.textContent = s.nombre || s.calle || `Sala N° ${s.id_sala}`;
             select.appendChild(option);
         });

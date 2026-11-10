@@ -1,4 +1,3 @@
-// Función para crear filas de cepas visualmente
 function crearItemLista(texto, idElemento = null, porcentaje = null) {
     const li = document.createElement('li');
     li.className = 'item';
@@ -13,7 +12,6 @@ function crearItemLista(texto, idElemento = null, porcentaje = null) {
     
     li.querySelector('.btn-eliminar-item').addEventListener('click', () => {
         li.remove();
-        // Si borra la cepa, la volvemos a habilitar en el select
         if (idElemento) {
             const opcion = document.querySelector(`#select-cepa option[value="${idElemento}"]`);
             if (opcion) opcion.disabled = false;
@@ -23,7 +21,6 @@ function crearItemLista(texto, idElemento = null, porcentaje = null) {
     return li;
 }
 
-// Función principal de envío (POST)
 async function crearVino() {
     const codigoVino = document.getElementById('codigo_vino').value.trim();
     
@@ -45,7 +42,6 @@ async function crearVino() {
         maridajes: []
     };
 
-    // Extraer y validar cepas
     let porcentajeTotal = 0;
     document.querySelectorAll('#lista-cepas .item:not(#fila-agregar-cepa)').forEach(li => {
         if (li.dataset.id && li.dataset.porcentaje) {
@@ -71,14 +67,13 @@ async function crearVino() {
 
     // Petición POST
     try {
-        const respuesta = await fetch(`http://localhost:8000/v1/api/vinos`, {
+        const respuesta = await fetchAPI('/v1/api/vinos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosNuevos)
         });
 
         if (respuesta.ok) {
-            // Si se crea bien, lo devolvemos al catálogo general
             window.location.href = `index.html`;
         } else {
             const errorData = await respuesta.json();

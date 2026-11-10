@@ -1,0 +1,104 @@
+name: database-deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pruebas:
+    name: Migraciones y pruebas (postgres 16)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ${{ secrets.POSTGRES_USER }} -d ${{ secrets.POSTGRES_DB }}"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_NAME: ${{ secrets.POSTGRES_DB }}
+      DB_USER: ${{ secrets.POSTGRES_USER }}
+      DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ejecutar migraciones (Flyway)
+        run: >
+          docker run --rm --network host
+          -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
+          flyway/flyway:10-alpine
+          -url=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
+          -user=${{ secrets.POSTGRES_USER }}
+          -password="${{ secrets.POSTGRES_PASSWORD }}"
+          migrate
+
+      - name: Validar migraciones (Flyway validate)
+        run: >
+          docker run --rm --network host
+          -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
+          flyway/flyway:10-alpine
+          -url=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
+          -user=${{ secrets.POSTGRES_USER }}
+          -password="${{ secrets.POSTGRES_PASSWORD }}"
+          validate
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: uv sync --frozen
+
+      - name: Ejecutar pruebas
+        run: uv run pytest -q
+
+  desplegar:
+    name: Desplegar migraciones a Neon (producción)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Migrar base de datos productiva (endpoint directo, sin pooler)
+        run: >
+          docker run --rm
+          -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
+          flyway/flyway:10-alpine
+          -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require"
+          -user=app_migrator
+          -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}"
+          migrate
+
+      - name: Verificar éxito del despliegue (Flyway validate)
+        run: >
+          docker run --rm
+          -v "${{ github.workspace }}/db/migrations:/flyway/sql:ro"
+          -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
+          flyway/flyway:10-alpine
+          -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require"
+          -user=app_migrator
+          -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}"
+          validate
+
+      - name: Verificar éxito del despliegue (smoke test)
+        run: >
+          docker run --rm postgres:16-alpine
+          psql "postgresql://app_migrator:${{ secrets.NEON_MIGRATOR_PASSWORD }}@${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require"
+          -c "SELECT count(*) AS tablas_public FROM information_schema.tables WHERE table_schema = 'public';"

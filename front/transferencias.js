@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputBuscar = document.getElementById('buscar-transferencia');
     const selectEstado = document.getElementById('filtro-estado');
 
-    // Escuchar eventos para filtrar en tiempo real
     if (inputBuscar) inputBuscar.addEventListener('input', renderizarTransferencias);
     if (selectEstado) selectEstado.addEventListener('change', renderizarTransferencias);
 });
@@ -16,13 +15,12 @@ async function cargarTransferencias() {
     contenedor.innerHTML = '<p style="text-align:center; font-size: 1.2rem;">Cargando transferencias...</p>';
 
     try {
-        // Pedimos todas las transferencias recientes (o le pones un límite seguro)
+        
         const respuesta = await fetchAPI('/v1/api/transferencias?limit=500&offset=0');
         if (respuesta) {
             todasLasTransferencias = respuesta;
         }
         
-        // Las ordenamos para que las más nuevas (número más alto) salgan primero
         todasLasTransferencias.sort((a, b) => {
             const numA = a.numero_transferencia || a.nro_transferencia || a.id || 0;
             const numB = b.numero_transferencia || b.nro_transferencia || b.id || 0;

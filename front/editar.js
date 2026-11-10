@@ -113,7 +113,7 @@ async function guardarCambios() {
     });
 
     try {
-        const respuesta = await fetch(`http://localhost:8000/v1/api/vinos/${codigoVino}`, {
+        const respuesta = await fetchAPI(`/v1/api/vinos/${codigoVino}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosActualizados)

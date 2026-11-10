@@ -102,7 +102,7 @@ async function registrarVenta(evento) {
     };
 
     try {
-        const respuesta = await fetch(`http://localhost:8000/v1/api/comprobantes`, {
+        const respuesta = await fetchAPI('/v1/api/comprobantes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosVenta)

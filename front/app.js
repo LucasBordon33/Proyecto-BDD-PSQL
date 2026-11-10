@@ -3,7 +3,6 @@ let paginaActual = 1;
 const LIMITE_POR_PAGINA = 9;
 let busquedaActual = ""; 
 
-// Agregamos objeto para los filtros
 let filtrosActuales = { tipo: "", cepa: "", bodega: "", anada: "" };
 
 // --- LÓGICA DEL CATÁLOGO ---
@@ -13,13 +12,13 @@ async function cargarCatalogo() {
 
     const offset = (paginaActual - 1) * LIMITE_POR_PAGINA;
     
-    // Armamos la URL base
+   
     let url = `/v1/api/vinos?limit=${LIMITE_POR_PAGINA}&offset=${offset}`;
     
-    // Sumamos la búsqueda
+    
     if (busquedaActual.trim() !== "") url += `&nombre=${encodeURIComponent(busquedaActual)}`;
     
-    // Sumamos los filtros dinámicamente si tienen valor
+
     if (filtrosActuales.tipo) url += `&tipo=${encodeURIComponent(filtrosActuales.tipo)}`;
     if (filtrosActuales.cepa) url += `&cepa=${encodeURIComponent(filtrosActuales.cepa)}`;
     if (filtrosActuales.bodega) url += `&bodega=${encodeURIComponent(filtrosActuales.bodega)}`;
@@ -57,17 +56,14 @@ function cambiarPagina(direccion) {
 }
 
 function actualizarControlesPaginacion(cantidadVinosObtenidos) {
-    // Actualiza el texto en ambos selectores (el de arriba y el de abajo)
     document.querySelectorAll('.texto-pagina').forEach(el => {
         el.innerText = `Página ${paginaActual}`;
     });
     
-    // Oculta o muestra ambos botones "Anterior"
     document.querySelectorAll('.btn-anterior').forEach(btn => {
         btn.style.visibility = paginaActual === 1 ? 'hidden' : 'visible';
     });
 
-    // Oculta o muestra ambos botones "Siguiente"
     document.querySelectorAll('.btn-siguiente').forEach(btn => {
         btn.style.visibility = cantidadVinosObtenidos < LIMITE_POR_PAGINA ? 'hidden' : 'visible';
     });
@@ -82,18 +78,15 @@ if (inputBuscador) {
     });
 }
 
-// Lógica de visualización del panel de filtros
 const btnFiltroToggle = document.querySelector('.filtro');
 const panelFiltros = document.getElementById('panel-filtros');
 
 if (btnFiltroToggle) {
     btnFiltroToggle.addEventListener('click', () => {
-        // Alterna entre mostrar u ocultar el panel
         panelFiltros.style.display = panelFiltros.style.display === 'none' ? 'flex' : 'none';
     });
 }
 
-// Botón Aplicar Filtros
 const btnAplicar = document.getElementById('btn-aplicar-filtros');
 if (btnAplicar) {
     btnAplicar.addEventListener('click', () => {
@@ -101,12 +94,11 @@ if (btnAplicar) {
         filtrosActuales.cepa = document.getElementById('filtro-cepa').value;
         filtrosActuales.bodega = document.getElementById('filtro-bodega').value;
         filtrosActuales.anada = document.getElementById('filtro-anada').value;
-        paginaActual = 1; // Volver a la pag 1 al filtrar
+        paginaActual = 1; 
         cargarCatalogo();
     });
 }
 
-// Botón Limpiar Filtros
 const btnLimpiar = document.getElementById('btn-limpiar-filtros');
 if (btnLimpiar) {
     btnLimpiar.addEventListener('click', () => {
@@ -121,19 +113,16 @@ if (btnLimpiar) {
     });
 }
 
-// --- LÓGICA DEL MENÚ DESPLEGABLE "+" ---
 document.addEventListener('DOMContentLoaded', () => {
     const btnMas = document.getElementById('btn-opciones-mas');
     const menuMas = document.getElementById('menu-mas');
 
     if (btnMas && menuMas) {
-        // Abrir/cerrar al hacer clic en el botón
         btnMas.addEventListener('click', (evento) => {
-            evento.stopPropagation(); // Evita que el clic se propague al document
+            evento.stopPropagation(); 
             menuMas.classList.toggle('activo');
         });
 
-        // Cerrar el menú automáticamente si el usuario hace clic en cualquier otro lado
         document.addEventListener('click', (evento) => {
             if (!menuMas.contains(evento.target)) {
                 menuMas.classList.remove('activo');
@@ -142,5 +131,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Ejecución inicial
 cargarCatalogo();

@@ -1,5 +1,9 @@
-// Centralizamos la URL del backend (FastAPI por defecto usa el 8000)
-const API_URL = "http://localhost:8000";
+// Centralizamos la URL del backend (FastAPI por defecto usa el 8000).
+// Se lee de window.API_CONFIG (definido en config.js) para permitir
+// configuración por variable de entorno en despliegue.
+const API_URL = (window.API_CONFIG && window.API_CONFIG.API_BASE_URL)
+    ? window.API_CONFIG.API_BASE_URL
+    : "http://localhost:8000";
 
 // Función base para hacer peticiones fácilmente
 async function fetchAPI(endpoint, options = {}) {
@@ -10,11 +14,11 @@ async function fetchAPI(endpoint, options = {}) {
             },
             ...options
         });
-        
+
         if (!response.ok) {
             throw new Error(`Error de la API: ${response.status}`);
         }
-        
+
         return await response.json();
     } catch (error) {
         console.error("Falló la petición:", error);
