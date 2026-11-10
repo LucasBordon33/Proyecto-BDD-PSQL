@@ -40,23 +40,31 @@ function calcularTotal() {
 
 // 3. Registrar la venta en FastAPI
 async function registrarVenta(evento) {
-    evento.preventDefault(); // Evita que el formulario recargue la página
+    evento.preventDefault(); 
 
-    // Capturamos los campos de búsqueda
-    const nombreCliente = document.getElementById('cliente').value.trim();
-    const nombreSala = document.getElementById('sala').value.trim();
+    // Capturamos los IDs ocultos que guardamos al hacer clic en las listas
+    const inputCliente = document.getElementById('cliente');
+    const inputSala = document.getElementById('sala');
     const cantidad = parseInt(document.getElementById('input-cantidad').value);
     
-    if (!nombreCliente || !nombreSala) {
-        mostrarError("Debes especificar el cliente y la sala de venta.");
+    const idClienteSeleccionado = inputCliente.dataset.id;
+    const idSalaSeleccionada = inputSala.dataset.id;
+
+    if (!idClienteSeleccionado || !idSalaSeleccionada) {
+        mostrarError("Debes seleccionar un cliente y una sala de la lista.");
         return;
     }
 
-    // Estructura de datos para tu backend
+    if (isNaN(cantidad) || cantidad < 1) {
+        mostrarError("La cantidad debe ser mayor a 0.");
+        return;
+    }
+
+    // Estructura de datos para tu backend (usando IDs numéricos)
     const datosVenta = {
         codigo_vino: codigoVino,
-        cliente: nombreCliente, 
-        sala: nombreSala,       
+        id_cliente: parseInt(idClienteSeleccionado), 
+        id_sala: parseInt(idSalaSeleccionada),       
         cantidad: cantidad
     };
 
@@ -68,7 +76,6 @@ async function registrarVenta(evento) {
         });
 
         if (respuesta.ok) {
-            // Si la venta es un éxito, redirigimos al catálogo
             window.location.href = 'index.html';
         } else {
             const errorData = await respuesta.json();
@@ -79,7 +86,7 @@ async function registrarVenta(evento) {
     }
 }
 
-// 4. Utilidades y eventos de inicio
+// 4. Utilidades
 function mostrarError(mensaje) {
     const errorBox = document.querySelector('.error');
     if (errorBox) {
@@ -88,7 +95,11 @@ function mostrarError(mensaje) {
     }
 }
 
+// ==========================================
+// 5. INICIALIZACIÓN Y EVENTOS DE LA PÁGINA
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    
     // Escondemos la caja de error al inicio
     const errorBox = document.querySelector('.error');
     if (errorBox) errorBox.style.display = 'none';
@@ -102,15 +113,149 @@ document.addEventListener('DOMContentLoaded', () => {
     // Iniciamos la carga del vino
     cargarDatosVenta();
     
-    // Hacemos que el total se actualice al teclear la cantidad
+    // Total dinámico
     const inputCantidad = document.getElementById('input-cantidad');
     if (inputCantidad) {
         inputCantidad.addEventListener('input', calcularTotal);
     }
     
-    // Conectamos el botón de registrar
+    // Botón de registrar
     const btnRegistrar = document.querySelector('.botones button[type="submit"]');
     if (btnRegistrar) {
         btnRegistrar.addEventListener('click', registrarVenta);
     }
+
+    // --- LÓGICA DE BÚSQUEDA DE CLIENTES ---
+    const inputCliente = document.getElementById('cliente');
+    const listaClientes = document.getElementById('lista-clientes');
+    const labelClienteSeleccionado = document.getElementById('cliente-seleccionado');
+    let timeoutBusqueda; 
+
+    if (inputCliente && listaClientes) {
+        inputCliente.addEventListener('input', () => {
+            clearTimeout(timeoutBusqueda); 
+            const texto = inputCliente.value.trim();
+            
+            inputCliente.dataset.id = "";
+            if (labelClienteSeleccionado) labelClienteSeleccionado.style.display = 'none';
+            
+            if (texto.length < 2) {
+                listaClientes.style.display = 'none';
+                return;
+            }
+
+            timeoutBusqueda = setTimeout(async () => {
+                try {
+                    const resultados = await fetchAPI(`/v1/api/clientes?buscar=${encodeURIComponent(texto)}&limit=10&offset=0`);
+                    listaClientes.innerHTML = ''; 
+                    
+                    if (resultados && resultados.length > 0) {
+                        resultados.forEach(c => {
+                            const li = document.createElement('li');
+                            li.className = 'item';
+                            li.innerHTML = `<button class="item__opcion" type="button">${c.nombre_razon_social} (Doc: ${c.nro_doc})</button>`;
+                            
+                            li.querySelector('button').addEventListener('click', () => {
+                                inputCliente.value = c.nro_doc; 
+                                inputCliente.dataset.id = c.id_cliente; 
+                                
+                                if (labelClienteSeleccionado) {
+                                    labelClienteSeleccionado.textContent = `Seleccionado: ${c.nombre_razon_social}`;
+                                    labelClienteSeleccionado.style.display = 'block';
+                                }
+                                listaClientes.style.display = 'none';
+                            });
+                            listaClientes.appendChild(li);
+                        });
+                        listaClientes.style.display = 'grid';
+                    } else {
+                        listaClientes.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error("Error buscando clientes:", error);
+                    listaClientes.style.display = 'none';
+                }
+            }, 300);
+        });
+    }
+
+    // --- LÓGICA DE SELECCIÓN DE SALAS ---
+    const inputSala = document.getElementById('sala');
+    const listaSalas = document.getElementById('lista-salas');
+    const labelSalaSeleccionada = document.getElementById('sala-seleccionada');
+    let todasLasSalas = []; // Guardamos las salas en memoria para buscar ultra rápido
+
+    if (inputSala && listaSalas) {
+        // Función auxiliar para dibujar la lista en pantalla
+        const renderizarSalas = (salasAMostrar) => {
+            listaSalas.innerHTML = '';
+            if (salasAMostrar && salasAMostrar.length > 0) {
+                salasAMostrar.forEach(s => {
+                    const li = document.createElement('li');
+                    li.className = 'item';
+                    li.innerHTML = `<button class="item__opcion" type="button">${s.nombre}</button>`;
+                    
+                    li.querySelector('button').addEventListener('click', () => {
+                        inputSala.value = s.nombre; 
+                        inputSala.dataset.id = s.id_sala; 
+                        
+                        if (labelSalaSeleccionada) {
+                            labelSalaSeleccionada.textContent = `Seleccionada: ${s.nombre}`;
+                            labelSalaSeleccionada.style.display = 'block';
+                        }
+                        listaSalas.style.display = 'none';
+                    });
+                    listaSalas.appendChild(li);
+                });
+                listaSalas.style.display = 'grid';
+            } else {
+                listaSalas.style.display = 'none'; // Si no hay coincidencias, ocultamos
+            }
+        };
+
+        // Al hacer clic en la casilla: bajamos las salas (si no lo hicimos ya) y las mostramos
+        inputSala.addEventListener('click', async () => {
+            if (todasLasSalas.length === 0) {
+                try {
+                    todasLasSalas = await fetchAPI('/v1/api/salas');
+                } catch (error) {
+                    console.error("Error cargando salas:", error);
+                }
+            }
+            
+            const texto = inputSala.value.trim().toLowerCase();
+            const filtradas = todasLasSalas.filter(s => s.nombre.toLowerCase().includes(texto));
+            renderizarSalas(filtradas);
+        });
+
+        // Al teclear: limpiamos la selección y filtramos la lista en vivo
+        inputSala.addEventListener('input', async () => {
+            inputSala.dataset.id = "";
+            if (labelSalaSeleccionada) labelSalaSeleccionada.style.display = 'none';
+
+            // Por si el usuario empezó a teclear muy rápido sin haber hecho clic
+            if (todasLasSalas.length === 0) {
+                try {
+                    todasLasSalas = await fetchAPI('/v1/api/salas');
+                } catch (error) {
+                    console.error("Error cargando salas:", error);
+                }
+            }
+
+            const texto = inputSala.value.trim().toLowerCase();
+            const filtradas = todasLasSalas.filter(s => s.nombre.toLowerCase().includes(texto));
+            renderizarSalas(filtradas);
+        });
+    }
+
+    // Ocultar menús si se hace clic fuera de ellos
+    document.addEventListener('click', (e) => {
+        if (inputCliente && !inputCliente.contains(e.target) && !listaClientes.contains(e.target)) {
+            listaClientes.style.display = 'none';
+        }
+        if (inputSala && !inputSala.contains(e.target) && !listaSalas.contains(e.target)) {
+            listaSalas.style.display = 'none';
+        }
+    });
+
 });

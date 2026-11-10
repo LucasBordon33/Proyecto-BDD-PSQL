@@ -10,8 +10,10 @@ from api.routes.comprobantes_routes import router as comprobantes_router
 from api.routes.transferencias_routes import router as transferencias_router
 from api.routes.ingresos_routes import router as ingresos_router
 from api.routes.reportes import router as reportes_router
+from api.routes.salas_routes import router as salas_router
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,9 +54,11 @@ async def salud(request: Request):
     except Exception:
         return JSONResponse(status_code=503, content={"estado": "error", "base_de_datos": "desconectada"})
 
+
 app.include_router(vinos_router)
 app.include_router(clientes_router)
 app.include_router(comprobantes_router)
 app.include_router(transferencias_router)
 app.include_router(ingresos_router)
 app.include_router(reportes_router)
+app.include_router(salas_router)

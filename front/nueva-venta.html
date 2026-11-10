@@ -14,10 +14,12 @@
 
       <!-- Cliente y sala de venta -->
       <div class="venta__cliente">
+        
+        <!-- 1. BLOQUE DEL CLIENTE -->
         <div class="grupo">
           <div class="busqueda">
             <label class="solo-lectores" for="cliente">Cliente</label>
-            <input class="buscar" id="cliente" name="cliente" type="search" placeholder="Cliente" autocomplete="off">
+            <input class="buscar" id="cliente" name="cliente" type="search" placeholder="Buscar por nombre o DNI..." autocomplete="off">
             <button class="busqueda__boton" type="button" aria-label="Buscar cliente">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
@@ -25,27 +27,32 @@
               </svg>
             </button>
           </div>
-          <ul class="items" aria-label="Resultados de clientes">
-            <li class="item">
-              <span class="item__texto">Nuevo cliente</span>
-              <button class="item__boton" type="button" aria-label="Crear cliente nuevo">+</button>
-            </li>
-            <li class="item">
-              <button class="item__opcion" type="button">Cliente 00</button>
-            </li>
+          <!-- Etiqueta de confirmación -->
+          <p id="cliente-seleccionado" style="margin: 0.5rem 0 0 1.2rem; color: var(--vino); font-weight: 600; font-size: 1.2rem; display: none;"></p>
+          <!-- Desplegable -->
+          <ul class="items" id="lista-clientes" aria-label="Resultados de clientes" style="display: none;">
           </ul>
         </div>
 
-        <div class="busqueda">
-          <label class="solo-lectores" for="sala">Sala de venta</label>
-          <input class="buscar" id="sala" name="sala" type="search" placeholder="Sala de venta" autocomplete="off">
-          <button class="busqueda__boton" type="button" aria-label="Buscar sala de venta">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
-              <path d="M15 15l6 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
-            </svg>
-          </button>
+        <!-- 2. BLOQUE DE LA SALA DE VENTA -->
+        <div class="grupo">
+          <div class="busqueda">
+            <label class="solo-lectores" for="sala">Sala de venta</label>
+            <input class="buscar" id="sala" name="sala" type="search" placeholder="Seleccionar sala..." autocomplete="off">
+            <button class="busqueda__boton" type="button" aria-label="Buscar sala de venta">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M15 15l6 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <!-- Etiqueta de confirmación -->
+          <p id="sala-seleccionada" style="margin: 0.5rem 0 0 1.2rem; color: var(--vino); font-weight: 600; font-size: 1.2rem; display: none;"></p>
+          <!-- Desplegable -->
+          <ul class="items" id="lista-salas" aria-label="Resultados de salas" style="display: none;">
+          </ul>
         </div>
+        
       </div>
 
       <!-- Vinos de la venta -->
