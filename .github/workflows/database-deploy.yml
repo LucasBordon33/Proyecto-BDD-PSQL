@@ -14,18 +14,18 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bodega
         ports:
           - 5432:5432
         options: --health-cmd "pg_isready -U postgres -d bodega" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DB_HOST: localhost
       DB_PORT: "5432"
-      DB_NAME: ${{ secrets.POSTGRES_DB }}
-      DB_USER: ${{ secrets.POSTGRES_USER }}
-      DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      DB_NAME: bodega
+      DB_USER: postgres
+      DB_PASSWORD: postgres
     steps:
       - uses: actions/checkout@v4
 
@@ -35,9 +35,9 @@ jobs:
           -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
-          -url=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
-          -user=${{ secrets.POSTGRES_USER }}
-          -password="${{ secrets.POSTGRES_PASSWORD }}"
+          -url=jdbc:postgresql://localhost:5432/bodega
+          -user=postgres
+          -password=postgres
           migrate
 
       - name: Validar migraciones (Flyway validate)
@@ -46,9 +46,9 @@ jobs:
           -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
-          -url=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
-          -user=${{ secrets.POSTGRES_USER }}
-          -password="${{ secrets.POSTGRES_PASSWORD }}"
+          -url=jdbc:postgresql://localhost:5432/bodega
+          -user=postgres
+          -password=postgres
           validate
 
       - name: Instalar uv
