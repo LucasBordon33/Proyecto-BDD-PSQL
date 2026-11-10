@@ -652,3 +652,133 @@ body {
   .edicion { gap: 1rem 1.5rem; }
   .botones .boton { height: 3.25rem; }
 }
+
+
+/* ===== Nueva venta (vista horizontal) ===== */
+.pagina--ancha .titulo {
+  margin-bottom: 1.5rem;
+}
+
+.venta {
+  display: grid;
+  gap: 1.5rem 3rem;
+  align-items: start;
+}
+
+.venta__cliente {
+  display: grid;
+  gap: 1.75rem;
+}
+
+/* Campos de búsqueda con lupa */
+.busqueda {
+  position: relative;
+}
+
+.buscar {
+  width: 100%;
+  height: 3.5rem;
+  padding: 0 3.5rem 0 1.1rem;
+  border: 4px solid var(--tinta);
+  border-radius: var(--radio-izq) 999px 999px var(--radio-izq);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1.4rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.buscar::placeholder {
+  color: var(--placeholder);
+  opacity: 1;
+}
+
+.busqueda__boton {
+  position: absolute;
+  top: 50%;
+  right: 0.7rem;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tinta);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.busqueda__boton svg {
+  width: 1.9rem;
+  height: 1.9rem;
+}
+
+.item__opcion {
+  flex: 1;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Vinos de la venta */
+.lineas {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vino--venta {
+  padding-left: 0;
+}
+
+.vino--venta + .vino--venta {
+  margin-top: 0;
+}
+
+.vino--venta .vino__botella {
+  height: 13rem;
+}
+
+.vino__cantidad {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.agregar {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-top: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: #c8d0db;
+  color: var(--tinta);
+  font: inherit;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.total {
+  margin: 1.25rem 0 0;
+  font-size: 1.6rem;
+}
+
+@media (min-width: 40rem) {
+  .venta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (orientation: landscape) and (max-height: 32rem) {
+  .pagina--ancha .titulo { margin-bottom: 0.75rem; font-size: 2.25rem; }
+  .venta { gap: 1rem 2rem; }
+}

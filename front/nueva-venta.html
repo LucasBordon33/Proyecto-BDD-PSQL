@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nueva venta</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="pagina pagina--ancha">
+    <h1 class="titulo">Nueva venta</h1>
+
+    <form class="venta" action="#">
+
+      <!-- Cliente y sala de venta -->
+      <div class="venta__cliente">
+        <div class="grupo">
+          <div class="busqueda">
+            <label class="solo-lectores" for="cliente">Cliente</label>
+            <input class="buscar" id="cliente" name="cliente" type="search" placeholder="Cliente" autocomplete="off">
+            <button class="busqueda__boton" type="button" aria-label="Buscar cliente">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M15 15l6 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <ul class="items" aria-label="Resultados de clientes">
+            <li class="item">
+              <span class="item__texto">Nuevo cliente</span>
+              <button class="item__boton" type="button" aria-label="Crear cliente nuevo">+</button>
+            </li>
+            <li class="item">
+              <button class="item__opcion" type="button">Cliente 00</button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="busqueda">
+          <label class="solo-lectores" for="sala">Sala de venta</label>
+          <input class="buscar" id="sala" name="sala" type="search" placeholder="Sala de venta" autocomplete="off">
+          <button class="busqueda__boton" type="button" aria-label="Buscar sala de venta">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/>
+              <path d="M15 15l6 6" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Vinos de la venta -->
+      <section class="venta__detalle" aria-label="Vinos de la venta">
+        <ul class="lineas">
+          <li class="vino vino--venta">
+            <img class="vino__botella" src="botella.png" width="101" height="400"
+                 alt="Botella de vino tinto con etiqueta de uvas y viñedo">
+            <div class="vino__datos">
+              <h2 class="vino__nombre" id="venta-nombre">Cargando...</h2>
+              <p class="vino__precio" id="venta-precio">$0,00</p>
+              
+              <p class="vino__cantidad" style="display: flex; align-items: center; gap: 0.5rem;">
+                <label for="input-cantidad">Cantidad:</label>
+                <input id="input-cantidad" type="number" min="1" value="1" style="width: 4rem; text-align: center; border: 2px solid var(--tinta); border-radius: 0.5rem; font-size: 1.2rem;">
+              </p>
+            </div>
+          </li>
+        </ul>
+
+        <button class="agregar" type="button" aria-label="Agregar otro vino">+</button>
+        <p class="total">Total: $0,00</p>
+      </section>
+
+      <p class="error" aria-live="polite">ERROR BOX</p>
+
+      <div class="botones">
+        <button class="boton" type="submit">Registrar venta</button>
+        <a class="boton" href="detalle.html">Cancelar</a>
+      </div>
+    </form>
+  </main>
+  <script src="api.js"></script>
+  <script src="nueva-venta.js"></script>
+</body>
+</body>
+</html>

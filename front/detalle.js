@@ -49,6 +49,8 @@ async function cargarDetalleVino() {
     }
     
     document.getElementById('btn-editar').href = `editar.html?codigo_vino=${codigoVino}`;
+
+    document.getElementById('btn-nueva-venta').href = `nueva-venta.html?codigo_vino=${codigoVino}`;
 }
 
 cargarDetalleVino(); 
