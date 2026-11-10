@@ -29,24 +29,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Liberar bloqueos previos de PostgreSQL
+        run: >
+          docker run --rm --network host
+          postgres:16-alpine
+          psql "postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+          -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='bodega' AND pid<>pg_backend_pid();"
+
       - name: Ejecutar migraciones (Flyway)
         run: >
-          docker run --rm
+          docker run --rm --network host
           -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
-          -url=jdbc:postgresql://postgres:5432/bodega
+          -url=jdbc:postgresql://localhost:5432/bodega
           -user=postgres
           -password=postgres
           migrate
 
       - name: Validar migraciones (Flyway validate)
         run: >
-          docker run --rm
+          docker run --rm --network host
           -v "${{ github.workspace }}/db/migrations:/flyway/db/migrations:ro"
           -v "${{ github.workspace }}/flyway.conf:/flyway/conf/flyway.conf:ro"
           flyway/flyway:10-alpine
-          -url=jdbc:postgresql://postgres:5432/bodega
+          -url=jdbc:postgresql://localhost:5432/bodega
           -user=postgres
           -password=postgres
           validate
