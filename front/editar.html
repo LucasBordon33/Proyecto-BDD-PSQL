@@ -62,9 +62,32 @@
           <!-- ID lista-cepas -->
           <ul class="items" id="lista-cepas">
             <li class="item" id="fila-agregar-cepa">
-              <label class="solo-lectores" for="nueva-cepa">Agregar cepa</label>
-              <input class="item__entrada" id="nueva-cepa" type="text" placeholder="Agregar cepa y % (ej: Malbec 50)">
-              <button class="item__boton" type="button" aria-label="Agregar cepa">+</button>
+              <!-- Desplegable de cepas -->
+              <select class="item__entrada" id="select-cepa" style="cursor: pointer; padding-right: 0;">
+                <option value="" disabled selected>Elegir cepa...</option>
+                <optgroup label="Tintas">
+                  <option value="1">Malbec</option>
+                  <option value="2">Cabernet Sauvignon</option>
+                  <option value="3">Merlot</option>
+                  <option value="4">Syrah</option>
+                  <option value="5">Bonarda</option>
+                  <option value="6">Tempranillo</option>
+                  <option value="7">Pinot Noir</option>
+                </optgroup>
+                <optgroup label="Blancas">
+                  <option value="8">Chardonnay</option>
+                  <option value="9">Sauvignon Blanc</option>
+                  <option value="10">Torrontés</option>
+                  <option value="11">Chenin Blanc</option>
+                  <option value="12">Semillón</option>
+                </optgroup>
+              </select>
+              
+              <!-- Campo numérico para el porcentaje -->
+              <input class="item__entrada" id="input-porcentaje" type="number" min="1" max="100" placeholder="%" style="max-width: 4rem; text-align: center; border-left: 2px solid var(--tinta); border-radius: 0;">
+              
+              <!-- Agregamos un ID al botón para capturarlo en JS -->
+              <button class="item__boton" id="btn-add-cepa" type="button" aria-label="Agregar cepa">+</button>
             </li>
           </ul>
         </details>
@@ -76,14 +99,33 @@
               <svg viewBox="0 0 24 24"><path d="M5 9l7 7 7-7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
           </summary>
-          <!-- ID lista-maridajes -->
-          <ul class="items" id="lista-maridajes">
-            <li class="item" id="fila-agregar-maridaje">
-              <label class="solo-lectores" for="nuevo-maridaje">Agregar maridaje</label>
-              <input class="item__entrada" id="nuevo-maridaje" type="text" placeholder="Agregar maridaje">
-              <button class="item__boton" type="button" aria-label="Agregar maridaje">+</button>
-            </li>
-          </ul>
+          <!-- Checklist de maridajes -->
+          <div id="lista-maridajes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; padding: 1rem 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="maridaje" value="1" style="width: 1.2rem; height: 1.2rem; cursor: pointer;"> Carnes rojas
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="maridaje" value="2" style="width: 1.2rem; height: 1.2rem; cursor: pointer;"> Quesos duros
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="maridaje" value="3" style="width: 1.2rem; height: 1.2rem; cursor: pointer;"> Pastas (salsa roja)
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="maridaje" value="4" style="width: 1.2rem; height: 1.2rem; cursor: pointer;"> Carnes blancas
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="maridaje" value="5" style="width: 1.2rem; height: 1.2rem; cursor: pointer;"> Quesos blandos
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="maridaje" value="6" style="width: 1.2rem; height: 1.2rem; cursor: pointer;"> Pescados/mariscos
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="maridaje" value="7" style="width: 1.2rem; height: 1.2rem; cursor: pointer;"> Entradas/fiambres
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="maridaje" value="8" style="width: 1.2rem; height: 1.2rem; cursor: pointer;"> Postres
+            </label>
+          </div>
         </details>
       </div>
 
