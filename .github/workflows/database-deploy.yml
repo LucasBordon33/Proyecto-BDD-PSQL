@@ -29,18 +29,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Instalar Flyway CLI
+      - name: Validar conectividad con PostgreSQL (reintentos)
+        run: |
+          for i in $(seq 1 30); do
+            if pg_isready -h localhost -p 5432 -U postgres -d bodega; then
+              echo "PostgreSQL listo"
+              break
+            fi
+            echo "Esperando a PostgreSQL... ($i/30)"
+            sleep 2
+          done
+
+      - name: Instalar Flyway CLI (binario nativo)
         run: |
           curl -sfL https://github.com/flyway/flyway/releases/download/v10.22.0/flyway-10.22.0-linux-x86_64.tar.gz | tar -xz -C /tmp
           sudo mv /tmp/flyway-10.22.0/flyway /usr/local/bin/flyway
           flyway --version
 
-      - name: Liberar bloqueos previos de PostgreSQL
+      - name: Liberar bloqueos previos de Flyway/PostgreSQL
         run: |
           docker run --rm --network host postgres:16-alpine psql "postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable" \
             -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='bodega' AND pid<>pg_backend_pid();" || true
 
-      - name: Ejecutar migraciones (Flyway)
+      - name: Ejecutar migraciones (Flyway migrate)
         run: |
           flyway \
             -locations=filesystem:db/migrations \
@@ -62,6 +73,17 @@ jobs:
             -password=postgres \
             validate
 
+      - name: Información de migraciones aplicadas (flyway info)
+        run: |
+          flyway \
+            -locations=filesystem:db/migrations \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
+            -url=jdbc:postgresql://localhost:5432/bodega \
+            -user=postgres \
+            -password=postgres \
+            info
+
       - name: Instalar uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -81,7 +103,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Instalar Flyway CLI
+      - name: Instalar Flyway CLI (binario nativo)
         run: |
           curl -sfL https://github.com/flyway/flyway/releases/download/v10.22.0/flyway-10.22.0-linux-x86_64.tar.gz | tar -xz -C /tmp
           sudo mv /tmp/flyway-10.22.0/flyway /usr/local/bin/flyway
