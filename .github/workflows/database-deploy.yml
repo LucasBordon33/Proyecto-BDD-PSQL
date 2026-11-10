@@ -57,18 +57,17 @@ jobs:
               -U postgres \
               -d bodega
             then
-              echo "PostgreSQL listo en intento $i"
+              echo "PostgreSQL listo ($i)"
               exit 0
             fi
 
-            echo "Esperando PostgreSQL ($i/30)"
             sleep 2
           done
 
-          echo "ERROR: PostgreSQL no inició"
+          echo "PostgreSQL no inició"
           exit 1
 
-      - name: Verificar conexión
+      - name: Verificar PostgreSQL
         env:
           PGPASSWORD: postgres
         run: |
@@ -80,12 +79,10 @@ jobs:
 
       - name: Mostrar migraciones
         run: |
-          echo "===== MIGRACIONES ====="
           ls -lah db/migrations
-          echo ""
           find db/migrations -type f
 
-      - name: Flyway Info
+      - name: Flyway Info Inicial
         run: |
           docker run --rm \
             --network host \
@@ -99,35 +96,6 @@ jobs:
             -user=postgres \
             -password=postgres \
             info
-
-      - name: Flyway Validate
-        run: |
-          docker run --rm \
-            --network host \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
-            -X \
-            -sqlMigrationPrefix= \
-            -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
-            -url=jdbc:postgresql://localhost:5432/bodega \
-            -user=postgres \
-            -password=postgres \
-            validate
-
-      - name: Flyway Repair
-        run: |
-          docker run --rm \
-            --network host \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
-            -sqlMigrationPrefix= \
-            -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
-            -url=jdbc:postgresql://localhost:5432/bodega \
-            -user=postgres \
-            -password=postgres \
-            repair || true
 
       - name: Flyway Migrate
         run: |
@@ -143,6 +111,21 @@ jobs:
             -user=postgres \
             -password=postgres \
             migrate
+
+      - name: Flyway Validate
+        run: |
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
+            -X \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
+            -sqlMigrationSuffixes=.sql \
+            -url=jdbc:postgresql://localhost:5432/bodega \
+            -user=postgres \
+            -password=postgres \
+            validate
 
       - name: Flyway Info Final
         run: |
@@ -214,19 +197,6 @@ jobs:
 
           exit 1
 
-      - name: Flyway Validate
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
-            flyway/flyway:10.22.0 \
-            -sqlMigrationPrefix= \
-            -sqlMigrationSeparator=_ \
-            -sqlMigrationSuffixes=.sql \
-            -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require" \
-            -user=app_migrator \
-            -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}" \
-            validate
-
       - name: Flyway Migrate
         run: |
           docker run --rm \
@@ -239,6 +209,19 @@ jobs:
             -user=app_migrator \
             -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}" \
             migrate
+
+      - name: Flyway Validate
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/db/migrations:/flyway/sql \
+            flyway/flyway:10.22.0 \
+            -sqlMigrationPrefix= \
+            -sqlMigrationSeparator=_ \
+            -sqlMigrationSuffixes=.sql \
+            -url="jdbc:postgresql://${{ secrets.NEON_HOST }}/${{ secrets.NEON_DB }}?sslmode=require" \
+            -user=app_migrator \
+            -password="${{ secrets.NEON_MIGRATOR_PASSWORD }}" \
+            validate
 
       - name: Smoke Test
         env:
